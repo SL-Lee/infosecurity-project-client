@@ -1,0 +1,111 @@
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 200;
+  font-style: normal;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-ExtraLight.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-ExtraLight.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 200;
+  font-style: italic;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-ExtraLightIt.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-ExtraLightIt.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 300;
+  font-style: normal;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-Light.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-Light.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 300;
+  font-style: italic;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-LightIt.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-LightIt.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-Regular.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-Regular.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 400;
+  font-style: italic;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-It.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-It.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 500;
+  font-style: normal;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-Medium.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-Medium.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 500;
+  font-style: italic;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-MediumIt.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-MediumIt.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 600;
+  font-style: normal;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-Semibold.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-Semibold.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 600;
+  font-style: italic;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-SemiboldIt.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-SemiboldIt.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 700;
+  font-style: normal;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-Bold.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-Bold.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 700;
+  font-style: italic;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-BoldIt.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-BoldIt.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 900;
+  font-style: normal;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-Black.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-Black.ttf.woff") format("woff");
+}
+
+@font-face{
+  font-family: "Source Code Pro";
+  font-weight: 900;
+  font-style: italic;
+  font-stretch: normal;
+  src: url("../fonts/Source Code Pro/WOFF2/SourceCodePro-BlackIt.ttf.woff2") format("woff2"), url("../fonts/Source Code Pro/WOFF/SourceCodePro-BlackIt.ttf.woff") format("woff");
+}
