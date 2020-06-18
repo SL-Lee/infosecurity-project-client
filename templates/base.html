@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}{% endblock %}</title>
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}" />
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/source_code_pro.css') }}" />
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/source_sans_pro.css') }}" />
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/source_serif_pro.css') }}" />
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" />
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}" />
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}" />
 </head>
 <body>
@@ -16,6 +17,8 @@
   <footer>
     <p id="copyright" style="text-align: center;"><small>&#xa9; Copyright <span id="current-year"></span></small></p>
   </footer>
+  <script src="{{ url_for('static', filename='js/jquery-3.5.1.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/footer.js') }}"></script>
 </body>
 </html>
