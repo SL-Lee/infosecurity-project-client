@@ -129,6 +129,14 @@ def create_product():
     return make_response(jsonify(({"product": result})), 200)
 
 
+@app.route('/products/<id>', methods=['GET'])
+def get_product_by_id(id):
+    get_product = Product.query.get(id)
+    product_schema = ProductSchema()
+    product = product_schema.dump(get_product)
+    return make_response(jsonify({"product": product}))
+
+
 @app.route('/products/<id>', methods=['PUT'])
 def update_product_by_id(id):
     data = request.get_json()
