@@ -6,7 +6,8 @@ from flask import (
     redirect,
     render_template,
     request,
-    url_for
+    url_for,
+    jsonify
 )
 from flask_login import (
     current_user,
@@ -18,6 +19,7 @@ from flask_login import (
 from classes import forms
 from classes.models import db, User
 from werkzeug.security import generate_password_hash, check_password_hash
+from classes.products import db, Product, ProductSchema
 
 import os
 
@@ -87,6 +89,14 @@ def profile():
 @app.route("/product/<int:product_id>")
 def product(product_id):
     return render_template("product.html")
+
+
+@app.route('/classes/products', methods=['GET'])
+def products():
+    get_products = Product.query.all()
+    product_schema = ProductSchema(many=True)
+    products = product_schema.dump(get_products)
+    return make_response(jsonify({"product": products}))
 
 
 if __name__ == "__main__":
