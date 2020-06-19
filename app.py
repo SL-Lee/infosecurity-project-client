@@ -139,5 +139,13 @@ def update_product_by_id(id):
     return make_response(jsonify({"product": product}))
 
 
+@app.route('/products/<id>', methods=['DELETE'])
+def delete_product_by_id(id):
+    get_product = Product.query.get(id)
+    db.session.delete(get_product)
+    db.session.commit()
+    return make_response("", 204)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
