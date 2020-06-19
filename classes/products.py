@@ -25,7 +25,6 @@ class Product(db.Model):
 
     def __repr__(self):
         return '' % self.id
-db.create_all()
 
 class ProductSchema(ModelSchema):
     class Meta(ModelSchema.Meta):

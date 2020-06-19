@@ -91,12 +91,21 @@ def product(product_id):
     return render_template("product.html")
 
 
-@app.route('/classes/products', methods=['GET'])
+@app.route('/products', methods=['GET'])
 def products():
     get_products = Product.query.all()
     product_schema = ProductSchema(many=True)
     products = product_schema.dump(get_products)
     return make_response(jsonify({"product": products}))
+
+
+@app.route('/products', methods=['POST'])
+def create_product():
+    data = request.get_json()
+    product_schema = ProductSchema()
+    product = product_schema.load(data)
+    result = product_schema.dump(product.create())
+    return make_response(jsonify(({"product": result})), 200)
 
 
 if __name__ == "__main__":
