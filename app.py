@@ -17,8 +17,7 @@ from flask_login import (
     logout_user
 )
 from classes import forms
-from classes.products import db, Product, ProductSchema
-from classes.models import db, User, Role
+from classes.models import db, User, Role, Product, ProductSchema
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -77,6 +76,9 @@ def signup():
         newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
         customer = Role.query.filter_by(name="Customer").first()
         customer.users.append(newUser)
+        if User.query.filter_by(id="1").first().id == 1 and len(User.query.filter_by(id="1").first().roles) == 1:
+            admin = Role.query.filter_by(name="Admin").first()
+            admin.users.append(User.query.filter_by(id="1").first())
         db.session.add(newUser)
         db.session.commit()
         return redirect(url_for("login"))
