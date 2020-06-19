@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<style>
+  .table-container {
+    overflow-x: auto;
+  }
+</style>
+<h1>Admin</h1>
+<h2>Users</h2>
+<div class="table-container">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Date Created</th>
+        <th>Roles</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>User 1</td>
+        <td>example1@example.com</td>
+        <td>2020-06-19 22:00</td>
+        <td>Customer</td>
+        <td>
+          <button class="btn btn-danger">Delete</button>
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>User 2</td>
+        <td>example2@example.com</td>
+        <td>2020-06-19 22:01</td>
+        <td>Customer</td>
+        <td>
+          <button class="btn btn-danger">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<h2>Products</h2>
+<div class="table-container">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Brand</th>
+        <th>Price</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Product 1</td>
+        <td>Product 1 Description</td>
+        <td>Brand 1</td>
+        <td>$218</td>
+        <td>
+          <div class="btn-group">
+            <button class="btn btn-warning">Update</button>
+            <button class="btn btn-danger">Delete</button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Product 2</td>
+        <td>Product 2 Description</td>
+        <td>Brand 2</td>
+        <td>$218</td>
+        <td>
+          <div class="btn-group">
+            <button class="btn btn-warning">Update</button>
+            <button class="btn btn-danger">Delete</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

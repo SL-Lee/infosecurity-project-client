@@ -37,6 +37,16 @@
           <a class="nav-link" href="{{ url_for('signup') }}">Signup</a>
         </li>
         {% endif %}
+        <li class="nav-item">
+          <form class="form-inline" action="{{ url_for('search') }}">
+            <div class="input-group">
+              <input class="form-control bg-dark text-white" name="q" type="search" placeholder="Search" />
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="submit">Search</button>
+              </div>
+            </div>
+          </form>
+        </li>
       </ul>
     </div>
   </nav>

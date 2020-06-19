@@ -101,6 +101,12 @@ def profile():
     return render_template("profile.html", username=current_user.username, roles=roleList)
 
 
+@app.route("/admin")
+@login_required
+def admin():
+    return render_template("admin.html")
+
+
 @app.route("/product/<int:product_id>")
 def product(product_id):
     return render_template("product.html")
@@ -121,6 +127,7 @@ def create_product():
     product = product_schema.load(data)
     result = product_schema.dump(product.create())
     return make_response(jsonify(({"product": result})), 200)
+
 
 @app.route('/products/<id>', methods=['PUT'])
 def update_product_by_id(id):
@@ -147,6 +154,12 @@ def delete_product_by_id(id):
     db.session.delete(get_product)
     db.session.commit()
     return make_response("", 204)
+
+
+@app.route("/search")
+def search():
+    query = request.args.get("q")
+    return render_template("search.html", query=query)
 
 
 if __name__ == "__main__":
