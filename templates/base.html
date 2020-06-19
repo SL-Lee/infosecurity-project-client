@@ -12,8 +12,29 @@
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}" />
 </head>
 <body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">XYZ Store</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbar-links">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/">Shop</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('signup') }}">Signup</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container">
   {% block content %}
   {% endblock %}
+  </div>
   <footer>
     <p id="copyright" style="text-align: center;"><small>&#xa9; Copyright <span id="current-year"></span></small></p>
   </footer>

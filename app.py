@@ -15,10 +15,11 @@ from flask_login import (
     LoginManager,
     logout_user
 )
-import os
-from werkzeug.security import generate_password_hash, check_password_hash
 from classes import forms
 from classes.models import db, User
+from werkzeug.security import generate_password_hash, check_password_hash
+
+import os
 
 app = Flask(__name__)
 
@@ -26,15 +27,14 @@ app.secret_key = os.urandom(16)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
 
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-
 db.init_app(app)
 with app.app_context():
     db.create_all()
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -49,7 +49,7 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = forms.LoginForm(request.form)
-    if request.method == 'POST' and form.validate():
+    if request.method == "POST" and form.validate():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if check_password_hash(user.password, form.password.data):
@@ -62,7 +62,7 @@ def login():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     form = forms.RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
+    if request.method == "POST" and form.validate():
         hashedPassword = generate_password_hash(form.password.data, method="sha256")
         newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
         db.session.add(newUser)
@@ -77,10 +77,16 @@ def logout():
     logout_user()
     return redirect(url_for("index"))
 
+
 @app.route("/profile")
 @login_required
 def profile():
     return render_template("profile.html", username=current_user.username)
+
+
+@app.route("/product/<int:product_id>")
+def product(product_id):
+    return render_template("product.html")
 
 
 if __name__ == "__main__":

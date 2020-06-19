@@ -1,4 +1,13 @@
-from wtforms import Form, StringField, RadioField, SelectField, TextAreaField, PasswordField, BooleanField, SubmitField
+from wtforms import (
+    BooleanField,
+    Form,
+    PasswordField,
+    RadioField,
+    SelectField,
+    StringField,
+    SubmitField,
+    TextAreaField
+)
 from wtforms.validators import InputRequired, Email, Length
 
 

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Product{% endblock %}
+{% block content %}
+<!-- https://www.fossil.com/en-us/products/carmen-shopper/ZB7938001.html -->
+<!-- DOM XSS Attack example: http://localhost:5000/product/1?sort-by=%3Ciframe%20onload=%22alert(%27XSS%27)%22%3E%3C/iframe%3E -->
+<style>
+  #product-img-container > img {
+    max-height: 400px;
+    margin-bottom: 20px;
+  }
+
+  #product-reviews {
+    margin-top: 20px;
+    border-top: 1px solid rgb(192 192 192);
+    padding-top: 20px;
+  }
+
+  #product-reviews .card {
+    margin: 20px 0;
+  }
+</style>
+<h1>Carmen Shopper</h1>
+<div id="product-details" class="row">
+  <div id="product-img-container" class="col-12 col-md-6 d-flex justify-content-center">
+    <img src="https://fossil.scene7.com/is/image/FossilPartners/ZB7938001_main?$sfcc_fos_medium$" />
+  </div>
+  <div class="col-12 col-md-6">
+    <h2>Description</h2>
+    <p>Fits all phone sizes up to an iPhone® 11 Pro Max, Samsung Galaxy S10+® and iPad® Pro. Made out of 100% Polyester. Includes 1 Zipper Pocket, 2 Slide Pockets, Middle Compartment.</p>
+    <h3><b>$218.00</b></h3>
+    <button class="btn btn-primary">Add to Cart</button>
+  </div>
+</div>
+<div id="product-reviews">
+  <h2>Reviews</h2>
+  {% if current_user.is_authenticated %}
+  <div class="card">
+    <div class="card-body">
+      <form method="POST" onsubmit="return false;">
+        <div class="form-group">
+          <label for="review-rating">Review Rating:</label>
+          <select id="review-rating" class="form-control" name="review-rating">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5" selected="selected">5</option>
+          </select>
+          <label for="review-description">Review Description:</label>
+          <textarea id="review-description" class="form-control" name="review-description"></textarea>
+        </div>
+        <button class="btn btn-primary">Submit</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+  <div class="card">
+    <div class="card-body">
+      <h3 class="card-title">Sorting reviews by <span id="sort-by-placeholder" style="font-weight: 700;">highest-rating</span></h3>
+      <form>
+        <label for="sort-by-field">Sort By:</label>
+        <select id="sort-by-field" name="sort-by">
+          <option value="highest-rating">Highest Rating</option>
+          <option value="lowest-rating">Lowest Rating</option>
+        </select>
+        <button id="update-sorting-button" class="btn-xs btn-primary">Update</button>
+      </form>
+    </div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        <p><b>Customer 1</b> - ★★★★★</p>
+        <p>I love this bag! It's the perfect size! It's not too big & not too small & I love that there is a zipper divider in the middle as it helps keep my bag organized. I originally got this bag in the brown suede, but I ended up returning that one & instead went with the all black leather and I'm so happy I did. The leather feels very soft and smells sooo good, and I don't have to worry getting caught in the rain like I would have with the suede. It's the perfect bag to carry on the crook of your arm or crossbody & I can wear it with any style of clothing. It's the perfect everyday bag.</p>
+      </li>
+      <li class="list-group-item">
+        <p><b>Customer 2</b> - ★★☆☆☆</p>
+        <p>I love the size of this purse. I normally carry a much bigger bag, but this is nice and keeps me organized. However, I am VERY disappointed with the quality of the leather. It does not compare to the excellent quality of my other Fossil bags. Even the leather that the signature key is on-it sticks out because it has more of a plastic feel to it. Very disappointed.</p>
+      </li>
+      <li class="list-group-item">
+        <p><b>Customer 3</b> - ★★☆☆☆</p>
+        <p>I was so excited to buy this for my college aged daughter, but am very disappointed and very surprised at how small it is. It will not fit her laptop. I'm afraid I will have to return it. Although it is a nice bag, it just won't suit her needs.</p>
+      </li>
+    </ul>
+  </div>
+</div>
+<script>
+  window.addEventListener("load", e => {
+    var sortBy = (new URL(location.href)).searchParams.get("sort-by");
+    document.getElementById("sort-by-placeholder").innerHTML = sortBy;
+    if (!sortBy) {
+      document.getElementById("update-sorting-button").click();
+    } else if (sortBy == "highest-rating") {
+      document.querySelector("option[value='lowest-rating']").removeAttribute("selected");
+      document.querySelector("option[value='highest-rating']").setAttribute("selected", "selected");
+    } else if (sortBy == "lowest-rating") {
+      document.querySelector("option[value='highest-rating']").removeAttribute("selected");
+      document.querySelector("option[value='lowest-rating']").setAttribute("selected", "selected");
+    }
+  });
+</script>
+{% endblock %}
