@@ -2,4 +2,13 @@
 {% block title %}Index{% endblock %}
 {% block content %}
 <h1>Welcome to profile, {{ username }}</h1>
+<p>You are a
+{% for i in roles %}
+    {% if roles|length == 1 %}
+        {{ i }}
+    {% else %}
+        {{ i }},
+    {% endif %}
+{% endfor %}
+</p>
 {% endblock %}

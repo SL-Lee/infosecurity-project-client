@@ -17,9 +17,10 @@ from flask_login import (
     logout_user
 )
 from classes import forms
-from classes.models import db, User
-from werkzeug.security import generate_password_hash, check_password_hash
 from classes.products import db, Product, ProductSchema
+from classes.models import db, User, Role
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 import os
 
@@ -36,7 +37,14 @@ login_manager.login_view = "login"
 db.init_app(app)
 with app.app_context():
     db.create_all()
-
+    if db.session.query(Role).count() == 0:
+        customerrole = Role(name="Customer", description="This is a customer account")
+        sellerrole = Role(name="Seller", description="This is a seller account")
+        adminrole = Role(name="Admin", description="This is an admin account")
+        db.session.add(customerrole)
+        db.session.add(sellerrole)
+        db.session.add(adminrole)
+        db.session.commit()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -67,9 +75,11 @@ def signup():
     if request.method == "POST" and form.validate():
         hashedPassword = generate_password_hash(form.password.data, method="sha256")
         newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
+        customer = Role.query.filter_by(name="Customer").first()
+        customer.users.append(newUser)
         db.session.add(newUser)
         db.session.commit()
-        return "<h1>new user has been created</h1>"
+        return redirect(url_for("login"))
     return render_template("signup.html", form=form)
 
 
@@ -83,7 +93,10 @@ def logout():
 @app.route("/profile")
 @login_required
 def profile():
-    return render_template("profile.html", username=current_user.username)
+    roleList = []
+    for i in current_user.roles:
+        roleList.append(i.name)
+    return render_template("profile.html", username=current_user.username, roles=roleList)
 
 
 @app.route("/product/<int:product_id>")
