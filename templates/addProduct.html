@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %} Add Product {% endblock %}
+{% block content %}
+{% from "includes/_form_helper.html" import render_field %}
+    <div class="container-fluid content">
+        <div class="row justify-content-center">
+            <div class="col-sm-12">
+                <h4 class="text-center">Add Product</h4>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-sm-5">
+                <form class="form" method="POST">
+                    <div class="form-group">
+                        {{ render_field(form.name, class="form-control") }}
+                        {{ render_field(form.productDescription, class="form-control") }}
+                        {{ render_field(form.productBrand, class="form-control") }}
+                        {{ render_field(form.price, class="form-control") }}
+                        {{ render_field(form.quantity, class="form-control") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
