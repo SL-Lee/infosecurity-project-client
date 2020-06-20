@@ -6,7 +6,9 @@ from wtforms import (
     SelectField,
     StringField,
     SubmitField,
-    TextAreaField
+    TextAreaField,
+    FloatField,
+    IntegerField
 )
 from wtforms.validators import InputRequired, Email, Length, Optional
 
@@ -39,3 +41,11 @@ class AdminCreateForm(Form):
     email = StringField("Email", [InputRequired(), Email("Please enter your email address"), Length(max=120)])
     username = StringField("Username", [InputRequired(), Length(min=4, max=25)])
     password = PasswordField("Password", [InputRequired(), Length(min=8, max=80)])
+
+class addProductForm(Form):
+    name = StringField('Product Name:', [InputRequired()])
+    productDescription = TextAreaField('Product Description:', [InputRequired()])
+    productBrand = TextAreaField('Product Brand:', [InputRequired()])
+    price = FloatField('Product Price:', [InputRequired()])
+    quantity = IntegerField('Product Quantity:', [InputRequired()])
+    submit = SubmitField('Save')
