@@ -101,13 +101,33 @@ def logout():
     return redirect(url_for("index"))
 
 
-@app.route("/profile")
+@app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
-    roleList = []
-    for i in current_user.roles:
-        roleList.append(i.name)
-    return render_template("profile.html", username=current_user.username, roles=roleList)
+    form = forms.UpdateForm(request.form)
+    if request.method == "POST" and form.validate():
+        if check_password_hash(current_user.password, form.currentpassword.data):
+            user = User.query.filter_by(id=current_user.id).first()
+            if form.email.data != "":
+                user.email = form.email.data
+            if form.username.data != "":
+                user.username = form.username.data
+            if form.newpassword.data != "":
+                hashedPassword = generate_password_hash(form.newpassword.data, method="sha256")
+                user.password = hashedPassword
+            db.session.commit()
+            return redirect(url_for("profile"))
+    return render_template("profile.html", current_user=current_user, form=form)
+
+
+@app.route("/profile/delete")
+@login_required
+def deleteprofile():
+    deletedUser = User.query.filter_by(id=current_user.id).first()
+    logout_user()
+    db.session.delete(deletedUser)
+    db.session.commit()
+    return redirect(url_for("index"))
 
 
 @app.route("/admin")
@@ -117,6 +137,7 @@ def admin():
 
 
 @app.route("/admin/create/user", methods=["GET", "POST"])
+@login_required
 def staffsignup():
     form = forms.AdminCreateForm(request.form)
     if request.method == "POST" and form.validate():
@@ -133,6 +154,7 @@ def staffsignup():
 
 
 @app.route("/admin/delete/<int:user_id>")
+@login_required
 def adminDelete(user_id):
     deletedUser = User.query.filter_by(id=user_id).first()
     db.session.delete(deletedUser)
