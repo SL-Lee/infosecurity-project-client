@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Product{% endblock %}
 {% block content %}
+{% from "includes/_form_helper.html" import render_field %}
+{% from "includes/_display_stars.html" import display_stars %}
 <!-- https://www.fossil.com/en-us/products/carmen-shopper/ZB7938001.html -->
 <!-- DOM XSS Attack example: http://localhost:5000/product/1?sort-by=%3Ciframe%20onload=%22alert(%27XSS%27)%22%3E%3C/iframe%3E -->
 <style>
@@ -28,7 +30,13 @@
     <h2>Description</h2>
     <p>Fits all phone sizes up to an iPhone® 11 Pro Max, Samsung Galaxy S10+® and iPad® Pro. Made out of 100% Polyester. Includes 1 Zipper Pocket, 2 Slide Pockets, Middle Compartment.</p>
     <h3><b>$218.00</b></h3>
-    <button class="btn btn-primary">Add to Cart</button>
+    <form method="POST" onsubmit="return false;">
+      <div class="form-group">
+        <label for="quantity-field">Quantity:</label>
+        <input class="form-control" type="number" name="quantity" min="1" max="5" value="1" placeholder="Quantity" />
+      </div>
+      <button class="btn btn-primary">Add to Cart</button>
+    </form>
   </div>
 </div>
 <div id="product-reviews">
@@ -36,20 +44,14 @@
   {% if current_user.is_authenticated %}
   <div class="card">
     <div class="card-body">
-      <form method="POST" onsubmit="return false;">
+      <form method="POST" action="{% if user_reviewed %}{{ url_for('edit_review', user_id=current_user.id, product_id=product_id) }}{% else %}{{ url_for('add_review', user_id=current_user.id, product_id=product_id) }}{% endif %}">
         <div class="form-group">
-          <label for="review-rating">Review Rating:</label>
-          <select id="review-rating" class="form-control" name="review-rating">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5" selected="selected">5</option>
-          </select>
-          <label for="review-description">Review Description:</label>
-          <textarea id="review-description" class="form-control" name="review-description"></textarea>
+          {{ render_field(form.review_rating) }}
         </div>
-        <button class="btn btn-primary">Submit</button>
+        <div class="form-group">
+          {{ render_field(form.review_contents) }}
+        </div>
+        {% if user_reviewed %}<button class="btn btn-warning">Edit</button><button id="delete-review-button" class="btn btn-danger ml-2">Delete</button>{% else %}<button class="btn btn-primary">Submit</button>{% endif %}
       </form>
     </div>
   </div>
@@ -67,21 +69,24 @@
       </form>
     </div>
     <ul class="list-group list-group-flush">
+      {% for review in reviews %}
       <li class="list-group-item">
-        <p><b>Customer 1</b> - ★★★★★</p>
-        <p>I love this bag! It's the perfect size! It's not too big & not too small & I love that there is a zipper divider in the middle as it helps keep my bag organized. I originally got this bag in the brown suede, but I ended up returning that one & instead went with the all black leather and I'm so happy I did. The leather feels very soft and smells sooo good, and I don't have to worry getting caught in the rain like I would have with the suede. It's the perfect bag to carry on the crook of your arm or crossbody & I can wear it with any style of clothing. It's the perfect everyday bag.</p>
+        <p><b>{{ review["name"] }}</b> - {{ display_stars(review["rating"]) }}</p>
+        <p>{{ review["contents"]|safe }}</p>
       </li>
-      <li class="list-group-item">
-        <p><b>Customer 2</b> - ★★☆☆☆</p>
-        <p>I love the size of this purse. I normally carry a much bigger bag, but this is nice and keeps me organized. However, I am VERY disappointed with the quality of the leather. It does not compare to the excellent quality of my other Fossil bags. Even the leather that the signature key is on-it sticks out because it has more of a plastic feel to it. Very disappointed.</p>
-      </li>
-      <li class="list-group-item">
-        <p><b>Customer 3</b> - ★★☆☆☆</p>
-        <p>I was so excited to buy this for my college aged daughter, but am very disappointed and very surprised at how small it is. It will not fit her laptop. I'm afraid I will have to return it. Although it is a nice bag, it just won't suit her needs.</p>
-      </li>
+      {% endfor %}
     </ul>
   </div>
 </div>
+{% if current_user.is_authenticated and user_reviewed %}
+<script>
+  var deleteReviewButton = document.getElementById("delete-review-button");
+  deleteReviewButton.addEventListener("click", e => {
+    e.preventDefault();
+    fetch("{{ url_for('delete_review', user_id=current_user.id, product_id=product_id) }}", {"method": "DELETE"});
+  });
+</script>
+{% endif %}
 <script>
   window.addEventListener("load", e => {
     var sortBy = (new URL(location.href)).searchParams.get("sort-by");
