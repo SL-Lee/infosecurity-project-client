@@ -38,9 +38,11 @@ with app.app_context():
     db.create_all()
     if db.session.query(Role).count() == 0:
         customerrole = Role(name="Customer", description="This is a customer account")
-        sellerrole = Role(name="Seller", description="This is a seller account")
-        adminrole = Role(name="Admin", description="This is an admin account")
+        sellerrole = Role(name="Seller", description="This is a seller account, it manages all product listings")
+        staffrole = Role(name="Staff", description="This is the staff account, it manages the reviews of the products")
+        adminrole = Role(name="Admin", description="This is the master admin account")
         db.session.add(customerrole)
+        db.session.add(staffrole)
         db.session.add(sellerrole)
         db.session.add(adminrole)
         db.session.commit()
@@ -77,8 +79,15 @@ def signup():
         customer = Role.query.filter_by(name="Customer").first()
         customer.users.append(newUser)
         if User.query.filter_by(id="1").first().id == 1 and len(User.query.filter_by(id="1").first().roles) == 1:
+            staff = Role.query.filter_by(name="Staff").first()
+            staff.users.append(User.query.filter_by(id="1").first())
+            seller = Role.query.filter_by(name="Seller").first()
+            seller.users.append(User.query.filter_by(id="1").first())
             admin = Role.query.filter_by(name="Admin").first()
             admin.users.append(User.query.filter_by(id="1").first())
+        elif User.query.filter_by(id="2").first().id == 2 and len(User.query.filter_by(id="2").first().roles) == 1:
+            seller = Role.query.filter_by(name="Seller").first()
+            seller.users.append(User.query.filter_by(id="2").first())
         db.session.add(newUser)
         db.session.commit()
         return redirect(url_for("login"))
@@ -92,19 +101,65 @@ def logout():
     return redirect(url_for("index"))
 
 
-@app.route("/profile")
+@app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
-    roleList = []
-    for i in current_user.roles:
-        roleList.append(i.name)
-    return render_template("profile.html", username=current_user.username, roles=roleList)
+    form = forms.UpdateForm(request.form)
+    if request.method == "POST" and form.validate():
+        if check_password_hash(current_user.password, form.currentpassword.data):
+            user = User.query.filter_by(id=current_user.id).first()
+            if form.email.data != "":
+                user.email = form.email.data
+            if form.username.data != "":
+                user.username = form.username.data
+            if form.newpassword.data != "":
+                hashedPassword = generate_password_hash(form.newpassword.data, method="sha256")
+                user.password = hashedPassword
+            db.session.commit()
+            return redirect(url_for("profile"))
+    return render_template("profile.html", current_user=current_user, form=form)
+
+
+@app.route("/profile/delete")
+@login_required
+def deleteprofile():
+    deletedUser = User.query.filter_by(id=current_user.id).first()
+    logout_user()
+    db.session.delete(deletedUser)
+    db.session.commit()
+    return redirect(url_for("index"))
 
 
 @app.route("/admin")
 @login_required
 def admin():
-    return render_template("admin.html")
+    return render_template("admin.html", current_user=current_user, users=User.query.order_by(User.id).all())
+
+
+@app.route("/admin/create/user", methods=["GET", "POST"])
+@login_required
+def staffsignup():
+    form = forms.AdminCreateForm(request.form)
+    if request.method == "POST" and form.validate():
+        hashedPassword = generate_password_hash(form.password.data, method="sha256")
+        newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
+        customer = Role.query.filter_by(name="Customer").first()
+        customer.users.append(newUser)
+        staff = Role.query.filter_by(name="Staff").first()
+        staff.users.append(newUser)
+        db.session.add(newUser)
+        db.session.commit()
+        return redirect(url_for("admin"))
+    return render_template("signup.html", form=form)
+
+
+@app.route("/admin/delete/<int:user_id>")
+@login_required
+def adminDelete(user_id):
+    deletedUser = User.query.filter_by(id=user_id).first()
+    db.session.delete(deletedUser)
+    db.session.commit()
+    return redirect(url_for("admin"))
 
 
 @app.route("/product/<int:product_id>")

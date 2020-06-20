@@ -1,14 +1,28 @@
-{% extends "base.html" %}
-{% block title %}Index{% endblock %}
+{% extends 'base.html' %}
+{% block title %} Profile - XYZ Store {% endblock %}
+
 {% block content %}
-<h1>Welcome to profile, {{ username }}</h1>
-<p>You are a
-{% for i in roles %}
-    {% if roles|length == 1 %}
-        {{ i }}
-    {% else %}
-        {{ i }},
-    {% endif %}
-{% endfor %}
-</p>
+{% from "includes/_form_helper.html" import render_field %}
+    <div class="container-fluid content">
+        <div class="row justify-content-center">
+            <div class="col-sm-12">
+                <h4 class="text-center">Welcome to your profile {{ current_user.username }}</h4>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-sm-5">
+                <form class="form" method="POST">
+                    {{ form.csrf_token }}
+                    <div class="form-group">
+                        {{ render_field(form.email, class="form-control") }}
+                        {{ render_field(form.username, class="form-control") }}
+                        {{ render_field(form.newpassword, class="form-control") }}
+                        {{ render_field(form.currentpassword, class="form-control") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <button type="button" class="btn btn-danger" onclick="location.href='/profile/delete'" style="float:right">Delete Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
 {% endblock %}
