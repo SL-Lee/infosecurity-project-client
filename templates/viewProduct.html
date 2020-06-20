@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}View Product{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="col-4">
+        <a href="{{ url_for('addProduct') }}" class="btn btn-success m-5">Add a New Product</a>
+    </div>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Description</th>
+                <th scope="col">Brand</th>
+                <th scope="col">Price</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">View</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for product in products %}
+            <tr>
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.productDescription }}</td>
+                <td>{{ product.productBrand }}</td>
+                <td>{{ product.price }}</td>
+                <td>{{ product.quantity }}</td>
+                <td><a href="{{ url_for('product', product_id=product.id) }}" class="btn btn-primary btn-sm m-1">View</a></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
