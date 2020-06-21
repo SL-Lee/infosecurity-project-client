@@ -20,14 +20,16 @@
         <tbody>
         {% for product in products %}
             <tr>
-                <td>{{ product.id }}</td>
-                <td>{{ product.name }}</td>
-                <td>{{ product.productDescription }}</td>
-                <td>{{ product.productBrand }}</td>
+                <td>{{ product.productid }}</td>
+                <td>{{ product.product_name }}</td>
+                <td>{{ product.description }}</td>
+                <td>{{ product.brand }}</td>
                 <td>{{ product.price }}</td>
                 <td>{{ product.quantity }}</td>
-                <td><a href="{{ url_for('product', product_id=product.id) }}" class="btn btn-primary btn-sm m-1">View</a></td>
+                <td><a href="{{ url_for('get_product_by_id', product_id=product.productid) }}" class="btn btn-primary btn-sm m-1">View</a></td>
             </tr>
+        {% endfor %}
         </tbody>
     </table>
 </div>
+{% endblock %}

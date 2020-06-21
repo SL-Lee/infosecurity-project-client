@@ -29,25 +29,29 @@ class Role(db.Model):
     description = db.Column(db.String(255))
 
 class Product(db.Model):
-    __tablename__ = "products"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    productDescription = db.Column(db.String(100))
-    productBrand = db.Column(db.String(20))
-    price = db.Column(db.Decimal)
+    __tablename__ = 'products'
+    __table_args__ = {'extend_existing': True}
+    productid = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(100))
+    description = db.Column(db.String(100))
+    brand = db.Column(db.String(20))
+    price = db.Column(db.Numeric(10,2))
     quantity = db.Column(db.Integer)
 
+    def __repr__(self):
+        return f"Product('{self.productid}', '{self.product_name}', '{self.description}', '{self.brand}', '{self.price}', '{self.quantity}')"
+
+'''
     def create(self):
         db.session.add(self)
         db.session.commit()
         return self
 
-    def __init__(self, name, productDescription, productBrand, price, quantity):
-        self.name = name
-        self.productDescription = productDescription
-        self.productBrand = productBrand
+    def __init__(self, product_name, description, brand, price, quantity):
+        self.product_name = product_name
+        self.description = description
+        self.brand = brand
         self.price = price
         self.quantity = quantity
 
-    def __repr__(self):
-        return f"Product('{self.id}', '{self.name}', '{self.productDescription}', '{self.productBrand}', '{self.price}', '{self.quantity}')"
+'''

@@ -61,22 +61,29 @@
 {% endif %}
 {% for i in current_user.roles %}
   {% if i.name == "Seller" %}
-    <div class="container">
+    <div class="table-container">
+      {% for product in products %}
       <div id="display">
         <div id="productName">
-          <h1>{{ product.name }}</h1>
+          <h1>{{ product.product_name }}</h1>
         </div>
       </div>
+      {% endfor %}
+      {% for product in products %}
       <div id="productDescription">
         <h2>Details</h2>
-        <table id="descriptionTable">
+        <table id="table">
+          <tr>
+            <td>ID</td>
+            <td>{{ product.productid }}</td>
+          </tr>
           <tr>
             <td>Name</td>
-            <td>{{ product.name }}</td>
+            <td>{{ product.product_name }}</td>
           </tr>
           <tr>
             <td>Brand</td>
-            <td>{{ product.productBrand }}</td>
+            <td>{{ product.brand }}</td>
           </tr>
           <tr>
             <td>Price</td>
@@ -90,9 +97,10 @@
         <h2>Description</h2>
         <p>{{ product.description }}</p>
       </div>
+      {% endfor %}
     </div>
     <div>
-      <a class="btn btn-primary btn-sm mt-1 mb-1" href="{{ url_for('update_product', product_id=product.id }}">Update</a>
+      <a class="btn btn-primary btn-sm mt-1 mb-1" href="{{ url_for('update_product', product_id=product.productid) }}">Update</a>
       <button type="button" class="btn btn-danger btn-sm m-1" data-toggle="modal" data-target="#deleteModal">Delete</button>
     </div>
     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true" style="margin-top: 10%">
@@ -106,7 +114,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <form action="{{ url_for('delete_product', product_id=product.id) }}" method="POST">
+            <form action="{{ url_for('delete_product', product_id=product.productid) }}" method="POST">
               <input class="btn btn-danger" type="submit" value="Delete">
             </form>
           </div>

@@ -17,7 +17,7 @@ from flask_login import (
     logout_user
 )
 from classes import forms
-from classes.models import db, User, Role, Product, ProductSchema
+from classes.models import db, User, Role, Product
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -231,55 +231,58 @@ def delete_review(user_id, product_id):
 
 
 @app.route('/products', methods=['GET'])
-def products():
-    get_products = Product.query.all()
-    product_schema = ProductSchema(many=True)
-    products = product_schema.dump(get_products)
-    return make_response(jsonify({"product": products}))
+def getProducts():
+    products = Product.query.all()
+    return render_template('viewProduct.html', products=products)
 
 
-@app.route('/products', methods=['POST'])
-def create_product():
-    data = request.get_json()
-    product_schema = ProductSchema()
-    product = product_schema.load(data)
-    result = product_schema.dump(product.create())
-    return make_response(jsonify(({"product": result})), 200)
+@app.route('/products/new', methods=['GET', 'POST'])
+def addProduct():
+    form = forms.addProductForm(request.form)
+    if request.method == "POST" and form.validate():
+        product = Product(product_name=form.productName.data, description=form.productDescription.data, brand=form.productBrand.data, price=form.productPrice.data, quantity=form.productQuantity.data)
+        db.session.add(product)
+        db.session.commit()
+        flash(f'Product {{ form.productName }} added successfully', 'success')
+        return redirect('viewProduct.html')
+    return render_template('addProduct.html', form=form)
 
 
-@app.route('/products/<id>', methods=['GET'])
-def get_product_by_id(id):
-    get_product = Product.query.get(id)
-    product_schema = ProductSchema()
-    product = product_schema.dump(get_product)
-    return make_response(jsonify({"product": product}))
+@app.route('/products/<int:product_id>', methods=['GET'])
+def get_product_by_id(product_id):
+    products = Product.query.filter_by(productid=product_id).all()
+    return render_template('viewProduct.html', products=products)
 
 
-@app.route('/products/<id>', methods=['PUT'])
-def update_product_by_id(id):
-    data = request.get_json()
-    get_product = Product.query.get(id)
-    if data.get('title'):
-        get_product.title = data['title']
-    if data.get('productDescription'):
-        get_product.productDescription = data['productDescription']
-    if data.get('productBrand'):
-        get_product.productBrand = data['productBrand']
-    if data.get('price'):
-        get_product.price = data['price']
-    db.session.add(get_product)
+@app.route('/products/<int:product_id>/update', methods=['GET', 'POST'])
+def update_product(product_id):
+    products = Product.query.get(product_id)
+    form = forms.addProductForm(request.form)
+    if form.validate():
+        products.product_name = form.productName.data
+        products.description = form.productDescription.data
+        products.brand = form.productBrand.data
+        products.price = form.productPrice.data
+        products.quantity = form.productQuantity.data
+        db.session.commit()
+        flash('This product has been updated!', 'success')
+        return redirect((url_for('getProducts')))
+    elif request.method == 'GET':
+        form.productName.data = products.product_name
+        form.productDescription.data = products.description
+        form.productBrand.data = products.brand
+        form.productPrice.data = products.price
+        form.productQuantity.data = products.quantity
+    return render_template('addProduct.html', legend='Update Product', form=form)
+
+
+@app.route('/products/<int:product_id>/delete', methods=['POST'])
+def delete_product(product_id):
+    products = Product.query.filter_by(productid=product_id).first()
+    db.session.delete(products)
     db.session.commit()
-    product_schema = ProductSchema(only=['id', 'title', 'productDescription', 'productBrand', 'price'])
-    product = product_schema.dump(get_product)
-    return make_response(jsonify({"product": product}))
-
-
-@app.route('/products/<id>', methods=['DELETE'])
-def delete_product_by_id(id):
-    get_product = Product.query.get(id)
-    db.session.delete(get_product)
-    db.session.commit()
-    return make_response("", 204)
+    flash('Your product has been deleted!', 'success')
+    return redirect(url_for('getProducts'))
 
 
 @app.route("/search")
