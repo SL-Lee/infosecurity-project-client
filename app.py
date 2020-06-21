@@ -180,7 +180,7 @@ def product(product_id):
     else:
         user_review = None
 
-    return render_template("product.html", product=product, form=form, product_id=product_id, reviews=reviews, user_review=user_review)
+    return render_template("product.html", product=product, form=form, reviews=reviews, user_review=user_review)
 
 
 @app.route("/add_review/<int:user_id>/<int:product_id>", methods=["POST"])
