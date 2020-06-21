@@ -21,15 +21,15 @@
     margin: 20px 0;
   }
 </style>
-<h1>Carmen Shopper</h1>
+<h1>{{ product.product_name }}</h1>
 <div id="product-details" class="row">
   <div id="product-img-container" class="col-12 col-md-6 d-flex justify-content-center">
     <img src="https://fossil.scene7.com/is/image/FossilPartners/ZB7938001_main?$sfcc_fos_medium$" />
   </div>
   <div class="col-12 col-md-6">
     <h2>Description</h2>
-    <p>Fits all phone sizes up to an iPhone® 11 Pro Max, Samsung Galaxy S10+® and iPad® Pro. Made out of 100% Polyester. Includes 1 Zipper Pocket, 2 Slide Pockets, Middle Compartment.</p>
-    <h3><b>$218.00</b></h3>
+    <p>{{ product.description }}</p>
+    <h3><b>${{ product.price }}</b></h3>
     <form method="POST" onsubmit="return false;">
       <div class="form-group">
         <label for="quantity-field">Quantity:</label>
@@ -44,14 +44,14 @@
   {% if current_user.is_authenticated %}
   <div class="card">
     <div class="card-body">
-      <form method="POST" action="{% if user_reviewed %}{{ url_for('edit_review', user_id=current_user.id, product_id=product_id) }}{% else %}{{ url_for('add_review', user_id=current_user.id, product_id=product_id) }}{% endif %}">
+      <form method="POST" action="{% if user_review is none %}{{ url_for('add_review', user_id=current_user.id, product_id=product_id) }}{% else %}{{ url_for('edit_review', user_id=current_user.id, product_id=product_id) }}{% endif %}">
         <div class="form-group">
           {{ render_field(form.review_rating) }}
         </div>
         <div class="form-group">
           {{ render_field(form.review_contents) }}
         </div>
-        {% if user_reviewed %}<button class="btn btn-warning">Edit</button><button id="delete-review-button" class="btn btn-danger ml-2">Delete</button>{% else %}<button class="btn btn-primary">Submit</button>{% endif %}
+        {% if user_review is none %}<button class="btn btn-primary">Submit</button>{% else %}<button class="btn btn-warning">Edit</button><button id="delete-review-button" class="btn btn-danger ml-2">Delete</button>{% endif %}
       </form>
     </div>
   </div>
@@ -69,21 +69,27 @@
       </form>
     </div>
     <ul class="list-group list-group-flush">
-      {% for review in reviews %}
-      <li class="list-group-item">
-        <p><b>{{ review["name"] }}</b> - {{ display_stars(review["rating"]) }}</p>
-        <p>{{ review["contents"]|safe }}</p>
-      </li>
-      {% endfor %}
+      {% if reviews %}
+        {% for review in reviews %}
+        <li class="list-group-item">
+          <p><b>{{ review.user.username }}</b> - {{ display_stars(review.rating) }}</p>
+          <p>{{ review.contents|safe }}</p>
+        </li>
+        {% endfor %}
+      {% else %}
+      <p class="text-center text-secondary mt-3">There are no reviews for this product yet.</p>
+      {% endif %}
     </ul>
   </div>
 </div>
-{% if current_user.is_authenticated and user_reviewed %}
+{% if current_user.is_authenticated and user_review is not none %}
 <script>
   var deleteReviewButton = document.getElementById("delete-review-button");
   deleteReviewButton.addEventListener("click", e => {
     e.preventDefault();
-    fetch("{{ url_for('delete_review', user_id=current_user.id, product_id=product_id) }}", {"method": "DELETE"});
+    fetch("{{ url_for('delete_review', user_id=current_user.id, product_id=product_id) }}", {"method": "POST"}).then(response => {
+      location.href = location.href;
+    });
   });
 </script>
 {% endif %}

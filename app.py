@@ -17,7 +17,7 @@ from flask_login import (
     logout_user
 )
 from classes import forms
-from classes.models import db, User, Role, Product
+from classes.models import db, User, Role, Product, Review
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -165,32 +165,21 @@ def adminDelete(user_id):
 @app.route("/product/<int:product_id>")
 def product(product_id):
     form = forms.ReviewForm(request.form)
-    # TODO: replace "reviews" with a SQL query to retrieve a list of reviews for a product
-    reviews = [
-        {
-            "name": "Customer 1",
-            "rating": 5,
-            "contents": "I love this bag! It's the perfect size! It's not too big & not too small & I love that there is a zipper divider in the middle as it helps keep my bag organized. I originally got this bag in the brown suede, but I ended up returning that one & instead went with the all black leather and I'm so happy I did. The leather feels very soft and smells sooo good, and I don't have to worry getting caught in the rain like I would have with the suede. It's the perfect bag to carry on the crook of your arm or crossbody & I can wear it with any style of clothing. It's the perfect everyday bag."
-        },
-        {
-            "name": "Customer 2",
-            "rating": 2,
-            "contents": "I love the size of this purse. I normally carry a much bigger bag, but this is nice and keeps me organized. However, I am VERY disappointed with the quality of the leather. It does not compare to the excellent quality of my other Fossil bags. Even the leather that the signature key is on-it sticks out because it has more of a plastic feel to it. Very disappointed."
-        },
-        {
-            "name": "Customer 3",
-            "rating": 2,
-            "contents": "I was so excited to buy this for my college aged daughter, but am very disappointed and very surprised at how small it is. It will not fit her laptop. I'm afraid I will have to return it. Although it is a nice bag, it just won't suit her needs."
-        }
-    ]
+    product = Product.query.filter_by(productid=product_id).first_or_404()
+    reviews = Review.query.filter_by(product_id=product_id).order_by(Review.rating).all()
     sort_by = request.args.get("sort-by")
-    if sort_by == "highest-rating":
-        reviews = sorted(reviews, key=lambda x: x["rating"], reverse=True)
-    elif sort_by == "lowest-rating":
-        reviews = sorted(reviews, key=lambda x: x["rating"])
+    if sort_by != "lowest-rating":
+        reviews.reverse()
 
-    # TODO: If user already submitted a review for the product, set the values in the form to reflect it, and pass a variable called "user_reviewed" set to True to the page. If not, then just pass a variable called "user_reviewed" set to False.
-    return render_template("product.html", form=form, product_id=product_id, reviews=reviews, user_reviewed=False)
+    if current_user.is_authenticated:
+        user_review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+        if user_review is not None:
+            form.review_rating.data = str(user_review.rating)
+            form.review_contents.data = user_review.contents
+    else:
+        user_review = None
+
+    return render_template("product.html", product=product, form=form, product_id=product_id, reviews=reviews, user_review=user_review)
 
 
 @app.route("/add_review/<int:user_id>/<int:product_id>", methods=["POST"])
@@ -198,9 +187,17 @@ def product(product_id):
 def add_review(user_id, product_id):
     form = forms.ReviewForm(request.form)
     if form.validate():
-        # TODO: Insert review into database
-        # Vulnerability TODO: replace user_id with current_user.id (remove user_id variable in URL) - remember to change this at the page too
-        print({"user_id": user_id, "product_id": product_id, "review_rating": form.review_rating.data, "review_contents": form.review_contents.data})
+        user = User.query.filter_by(id=user_id).first()
+        product = Product.query.filter_by(productid=product_id).first()
+        if None in [user, product]:
+            print("No such user and/or product.")
+            return redirect(url_for("product", product_id=product_id))
+
+        review = Review(rating=form.review_rating.data, contents=form.review_contents.data)
+        review.product = product
+        user.reviews.append(review)
+        db.session.add(review)
+        db.session.commit()
     else:
         print("Review is invalid.")
 
@@ -212,21 +209,30 @@ def add_review(user_id, product_id):
 def edit_review(user_id, product_id):
     form = forms.ReviewForm(request.form)
     if form.validate():
-        # TODO: Edit review into database
-        # Vulnerability TODO: replace user_id with current_user.id (remove user_id variable in URL) - remember to change this at the page too
-        print({"user_id": user_id, "product_id": product_id, "review_rating": form.review_rating.data, "review_contents": form.review_contents.data})
+        review = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+        if review is None:
+            print("No such user and/or product, or user haven't submitted a review for this product.")
+            return redirect(url_for("product", product_id=product_id))
+
+        review.rating = form.review_rating.data
+        review.contents = form.review_contents.data
+        db.session.commit()
     else:
         print("Review is invalid.")
 
     return redirect(url_for('product', product_id=product_id))
 
 
-@app.route("/delete_review/<int:user_id>/<int:product_id>", methods=["DELETE"])
+@app.route("/delete_review/<int:user_id>/<int:product_id>", methods=["POST"])
 @login_required
 def delete_review(user_id, product_id):
-    # TODO: Delete review from database
-    # Vulnerability TODO: replace user_id with current_user.id (remove user_id variable in URL) - remember to change this at the page too
-    print({"user_id": user_id, "product_id": product_id})
+    review = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+    if review is None:
+        print("No such user and/or product, or user haven't submitted a review for this product.")
+        return redirect(url_for("product", product_id=product_id))
+
+    db.session.delete(review)
+    db.session.commit()
     return redirect(url_for('product', product_id=product_id))
 
 

@@ -27,7 +27,7 @@ class RegisterForm(Form):
 
 class ReviewForm(Form):
     review_rating = SelectField("Review Rating", [InputRequired()], choices=[("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5")], default="5", render_kw={"class": "form-control"})
-    review_contents = TextAreaField("Review Contents", [Length(max=255)], render_kw={"class": "form-control"})
+    review_contents = TextAreaField("Review Contents", [Length(max=255)], render_kw={"class": "form-control", "placeholder": "Review contents (255 characters max)"})
 
 
 class UpdateForm(Form):
