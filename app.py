@@ -54,7 +54,8 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    products = Product.query.all()
+    return render_template("index.html", products=products)
 
 
 @app.route("/login", methods=["GET", "POST"])
