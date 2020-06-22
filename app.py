@@ -276,14 +276,8 @@ def addProduct():
         db.session.add(product)
         db.session.commit()
         flash(f'Product {{ form.productName }} added successfully', 'success')
-        return redirect('product.html')
+        return redirect(url_for("product", product_id=product.productid))
     return render_template('addProduct.html', form=form)
-
-
-@app.route('/products/<int:product_id>', methods=['GET'])
-def get_product_by_id(product_id):
-    products = Product.query.filter_by(productid=product_id).all()
-    return render_template('product.html', products=products)
 
 
 @app.route('/products/<int:product_id>/update', methods=['GET', 'POST'])
