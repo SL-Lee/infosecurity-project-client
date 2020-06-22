@@ -62,12 +62,19 @@ def index():
 def login():
     form = forms.LoginForm(request.form)
     if request.method == "POST" and form.validate():
+        user = db.session.execute("SELECT * FROM user WHERE username = '%s' and password = '%s'" % (form.username.data, form.password.data))
+        id = [row[0] for row in user]
+        user = User.query.filter_by(id=id[0]).first()
+        login_user(user, remember=form.remember.data)
+        return redirect(url_for("profile"))
+        """
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if check_password_hash(user.password, form.password.data):
                 login_user(user, remember=form.remember.data)
                 return redirect(url_for("profile"))
         return redirect(url_for("login"))
+        """
     return render_template("login.html", form=form)
 
 
@@ -76,7 +83,7 @@ def signup():
     form = forms.RegisterForm(request.form)
     if request.method == "POST" and form.validate():
         hashedPassword = generate_password_hash(form.password.data, method="sha256")
-        newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
+        newUser = User(username=form.username.data, email=form.email.data, password=form.password.data)
         customer = Role.query.filter_by(name="Customer").first()
         customer.users.append(newUser)
         if User.query.filter_by(id="1").first().id == 1 and len(User.query.filter_by(id="1").first().roles) == 1:
