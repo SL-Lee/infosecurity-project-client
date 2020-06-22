@@ -134,7 +134,7 @@ def deleteprofile():
 @app.route("/admin")
 @login_required
 def admin():
-    return render_template("admin.html", current_user=current_user, users=User.query.order_by(User.id).all())
+    return render_template("admin.html", current_user=current_user, users=User.query.order_by(User.id).all(), products=Product.query.order_by(Product.productid).all())
 
 
 @app.route("/admin/create/user", methods=["GET", "POST"])
@@ -302,7 +302,7 @@ def update_product(product_id):
     return render_template('addProduct.html', legend='Update Product', form=form)
 
 
-@app.route('/products/<int:product_id>/delete', methods=['POST'])
+@app.route('/products/<int:product_id>/delete', methods=["GET", "POST"])
 def delete_product(product_id):
     products = Product.query.filter_by(productid=product_id).first()
     db.session.delete(products)
