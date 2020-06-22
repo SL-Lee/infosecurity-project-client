@@ -81,15 +81,17 @@
           <td>{{ product.description }}</td>
           <td>Price: ${{ product.price }}<br>Stock: {{ product.quantity }}</td>
           <td>
-            <button class="btn btn-primary" onclick="location.href='/products/{{ product.productid }}'">View</button>
-            <br>
-            {% for i in current_user.roles %}
-              {% if i.name == "Seller" %}
-                <button class="btn btn-primary" onclick="location.href='/products/{{ product.productid }}/update'">Update</button>
-                <br>
-                <button class="btn btn-danger" onclick="confirm('Are you sure you want to delete this product?') && (location.href='/products/{{ product.productid }}/delete')">Delete</button>
-              {% endif %}
-            {% endfor %}
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="location.href='/products/{{ product.productid }}'">View</button>
+              <br>
+              {% for i in current_user.roles %}
+                {% if i.name == "Seller" %}
+                  <button class="btn btn-warning" onclick="location.href='/products/{{ product.productid }}/update'">Update</button>
+                  <br>
+                  <button class="btn btn-danger" onclick="confirm('Are you sure you want to delete this product?') && (location.href='/products/{{ product.productid }}/delete')">Delete</button>
+                {% endif %}
+              {% endfor %}
+            </div>
           </td>
         </tr>
       {% endfor %}
