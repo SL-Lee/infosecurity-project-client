@@ -15,8 +15,14 @@
                     {{ form.csrf_token }}
                     <div class="form-group">
                         {{ render_field(form.productName, class="form-control") }}
+                    </div>
+                    <div class="form-group">
                         {{ render_field(form.productDescription, class="form-control") }}
+                    </div>
+                    <div class="form-group">
                         {{ render_field(form.productPrice, class="form-control") }}
+                    </div>
+                    <div class="form-group">
                         {{ render_field(form.productQuantity, class="form-control") }}
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
