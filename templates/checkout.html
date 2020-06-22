@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+{% from "includes/_form_helper.html" import render_field %}
+
+
+<form action="" method="post">
+{{ render_field(form.name, class="form-control") }}
+{{ render_field(form.cardNum, class="form-control") }}
+{{ render_field(form.CVV, class="form-control") }}
+{{ render_field(form.expiry_month, class="form-control") }}
+{{ render_field(form.expiry_year, class="form-control") }}
+{{ render_field(form.billing_address, class="form-control") }}
+{{ render_field(form.postal_code, class="form-control") }}
+<input type="submit" value="Submit" class="btn btn-primary" style="margin-top: 10px">
+</form>
+{% endblock %}

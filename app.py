@@ -236,6 +236,25 @@ def delete_review(user_id, product_id):
     db.session.commit()
     return redirect(url_for('product', product_id=product_id))
 
+@app.route("/cart")
+def cart():
+    for i in cart:
+        name = cart[i].get_productName
+    return render_template("product.html")
+
+@app.route("/checkout", methods=["GET", "POST"])
+def checkout():
+    checkoutForm = forms.Checkout(request.form)
+    if request.method == "POST":
+        name = checkoutForm.name.data
+        cardNum = checkoutForm.cardNum.data
+        CVV = checkoutForm.CVV.data
+        expiry_month = checkoutForm.expiry_month.data
+        expiry_year = checkoutForm.expiry_year.data
+        billing_address = checkoutForm.billing_address.data
+        postal_code = checkoutForm.postal_code.data
+        return redirect(url_for("index"))
+    return render_template("checkout.html", form=checkoutForm)
 
 @app.route('/products', methods=['GET'])
 def getProducts():
