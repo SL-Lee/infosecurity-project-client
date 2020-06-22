@@ -11,7 +11,6 @@
                 <th scope="col">ID</th>
                 <th scope="col">Name</th>
                 <th scope="col">Description</th>
-                <th scope="col">Brand</th>
                 <th scope="col">Price</th>
                 <th scope="col">Quantity</th>
                 <th scope="col">View</th>
@@ -23,7 +22,6 @@
                 <td>{{ product.productid }}</td>
                 <td>{{ product.product_name }}</td>
                 <td>{{ product.description }}</td>
-                <td>{{ product.brand }}</td>
                 <td>{{ product.price }}</td>
                 <td>{{ product.quantity }}</td>
                 <td><a href="{{ url_for('get_product_by_id', product_id=product.productid) }}" class="btn btn-primary btn-sm m-1">View</a></td>

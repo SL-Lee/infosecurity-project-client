@@ -45,7 +45,6 @@ class AdminCreateForm(Form):
 class addProductForm(Form):
     productName = StringField('Product Name:', [InputRequired(), Length(max=100)])
     productDescription = TextAreaField('Product Description:', [InputRequired()])
-    productBrand = TextAreaField('Product Brand:', [InputRequired(), Length(max=20)])
     productPrice = FloatField('Product Price:', [InputRequired()])
     productQuantity = IntegerField('Product Quantity:', [InputRequired()])
     submit = SubmitField('Save')

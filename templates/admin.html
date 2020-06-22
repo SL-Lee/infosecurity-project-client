@@ -67,9 +67,9 @@
         <tr>
           <th>ID</th>
           <th>Name</th>
-          <th>Brand</th>
           <th>Description</th>
-          <th>Details</th>
+          <th>Price</th>
+          <th>Stock</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -78,9 +78,9 @@
           <tr>
             <td>{{ product.productid }}</td>
             <td>{{ product.product_name }}</td>
-            <td>{{ product.brand }}</td>
             <td>{{ product.description }}</td>
-            <td>Price: ${{ product.price }}<br>Stock: {{ product.quantity }}</td>
+            <td>${{ product.price }}</td>
+            <td>{{ product.quantity }}</td>
             <td>
               <div class="btn-group">
                 <button class="btn btn-primary" onclick="location.href='/products/{{ product.productid }}'">View</button>

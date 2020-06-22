@@ -37,12 +37,11 @@ class Product(db.Model):
     productid = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(100))
     description = db.Column(db.String(100))
-    brand = db.Column(db.String(20))
     price = db.Column(db.Numeric(10,2))
     quantity = db.Column(db.Integer)
 
     def __repr__(self):
-        return f"Product('{self.productid}', '{self.product_name}', '{self.description}', '{self.brand}', '{self.price}', '{self.quantity}')"
+        return f"Product('{self.productid}', '{self.product_name}', '{self.description}', '{self.price}', '{self.quantity}')"
 
 '''
     def create(self):

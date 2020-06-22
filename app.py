@@ -273,7 +273,7 @@ def getProducts():
 def addProduct():
     form = forms.addProductForm(request.form)
     if request.method == "POST" and form.validate():
-        product = Product(product_name=form.productName.data, description=form.productDescription.data, brand=form.productBrand.data, price=form.productPrice.data, quantity=form.productQuantity.data)
+        product = Product(product_name=form.productName.data, description=form.productDescription.data, price=form.productPrice.data, quantity=form.productQuantity.data)
         db.session.add(product)
         db.session.commit()
         flash(f'Product {{ form.productName }} added successfully', 'success')
@@ -294,7 +294,6 @@ def update_product(product_id):
     if form.validate():
         products.product_name = form.productName.data
         products.description = form.productDescription.data
-        products.brand = form.productBrand.data
         products.price = form.productPrice.data
         products.quantity = form.productQuantity.data
         db.session.commit()
@@ -303,7 +302,6 @@ def update_product(product_id):
     elif request.method == 'GET':
         form.productName.data = products.product_name
         form.productDescription.data = products.description
-        form.productBrand.data = products.brand
         form.productPrice.data = products.price
         form.productQuantity.data = products.quantity
     return render_template('addProduct.html', legend='Update Product', form=form)
