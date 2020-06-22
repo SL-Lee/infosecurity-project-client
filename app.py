@@ -314,7 +314,13 @@ def delete_product(product_id):
 @app.route("/search")
 def search():
     query = request.args.get("q")
-    return render_template("search.html", query=query)
+    if query is None:
+        search_results = []
+    else:
+        query = query.strip().lower()
+        search_results = [i for i in Product.query.all() if query in i.product_name.lower()]
+
+    return render_template("search.html", query=query, search_results=search_results)
 
 
 if __name__ == "__main__":

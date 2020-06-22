@@ -12,34 +12,29 @@
     object-fit: cover;
   }
 </style>
-{% if query is none %}
+{% if query in [none, ""] %}
 <h1>Search</h1>
 <p>To start a search, type a query in the search bar (in the navigation bar) and press enter.</p>
 {% else %}
 <h1>Search results for "{{ query|safe }}"</h1>
+{% if search_results %}
 <div class="products row">
+  {% for product in search_results %}
   <div class="col-6 col-md-4 col-lg-3">
     <div class="card mb-4">
       <img class="card-img-top" src="https://fossil.scene7.com/is/image/FossilPartners/ZB7938001_main?$sfcc_fos_medium$" />
       <div class="card-body">
-        <h5 class="card-title text-truncate">Product 1</h5>
-        <p><b>$218.00</b></p>
-        <a class="btn btn-primary" href="{{ url_for('product', product_id=1) }}">View</a>
+        <h5 class="card-title text-truncate">{{ product.product_name }}</h5>
+        <p><b>${{ product.price }}</b></p>
+        <a class="btn btn-primary" href="{{ url_for('product', product_id=product.productid) }}">View</a>
         <a class="btn btn-primary" href="#">Add to Cart</a>
       </div>
     </div>
   </div>
-  <div class="col-6 col-md-4 col-lg-3">
-    <div class="card mb-4">
-      <img class="card-img-top" src="https://aignerimage.de/etienne-aigner-ag-res.cloudinary.com/image/upload/e_trim/q_auto,w_542,h_542,c_pad,b_white,d_ph.gif,e_sharpen/bo_100px_solid_white/v1/product/133707_0574-1.jpg" />
-      <div class="card-body">
-        <h5 class="card-title text-truncate">Product 2</h5>
-        <p><b>$218.00</b></p>
-        <a class="btn btn-primary" href="{{ url_for('product', product_id=1) }}">View</a>
-        <a class="btn btn-primary" href="#">Add to Cart</a>
-      </div>
-    </div>
-  </div>
+  {% endfor %}
 </div>
+{% else %}
+<p class="text-center text-secondary">No products match your query.</p>
+{% endif %}
 {% endif %}
 {% endblock %}
