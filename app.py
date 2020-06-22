@@ -265,8 +265,7 @@ def checkout():
 
 @app.route('/products', methods=['GET'])
 def getProducts():
-    products = Product.query.all()
-    return render_template('viewProduct.html', products=products)
+    return redirect('admin')
 
 
 @app.route('/products/new', methods=['GET', 'POST'])
@@ -277,14 +276,14 @@ def addProduct():
         db.session.add(product)
         db.session.commit()
         flash(f'Product {{ form.productName }} added successfully', 'success')
-        return redirect('viewProduct.html')
+        return redirect('product.html')
     return render_template('addProduct.html', form=form)
 
 
 @app.route('/products/<int:product_id>', methods=['GET'])
 def get_product_by_id(product_id):
     products = Product.query.filter_by(productid=product_id).all()
-    return render_template('viewProduct.html', products=products)
+    return render_template('product.html', products=products)
 
 
 @app.route('/products/<int:product_id>/update', methods=['GET', 'POST'])
