@@ -23,7 +23,7 @@ class User(UserMixin, db.Model):
         backref=db.backref("users", lazy='dynamic')
     )
     reviews = db.relationship("Review", backref=db.backref("user"))
-
+    orders = db.relationship("Orders", backref=db.backref("user"))
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -65,3 +65,16 @@ class Review(db.Model):
     rating = db.Column(db.Integer, nullable=False)
     contents = db.Column(db.String(255), nullable=False)
     product = db.relationship("Product")
+
+class Orders(db.Model):
+    orderid = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    order_product = db.relationship("Orderproduct", backref=db.backref("orders"))
+
+class Orderproduct(db.Model):
+    order_id = db.Column("order_id", db.Integer(), db.ForeignKey('orders.orderid'), primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.productid"), primary_key=True)
+    quantity = db.Column(db.Integer, nullable=False)
+    product = db.relationship("Product")
+
+

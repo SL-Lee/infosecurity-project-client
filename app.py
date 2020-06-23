@@ -7,7 +7,8 @@ from flask import (
     render_template,
     request,
     url_for,
-    jsonify
+    jsonify,
+    session
 )
 from flask_login import (
     current_user,
@@ -17,7 +18,7 @@ from flask_login import (
     logout_user
 )
 from classes import forms
-from classes.models import db, User, Role, Product, Review
+from classes.models import db, User, Role, Product, Review, Orders, Orderproduct
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -243,11 +244,41 @@ def delete_review(user_id, product_id):
     db.session.commit()
     return redirect(url_for('product', product_id=product_id))
 
-@app.route("/cart")
+
+@app.route("/addtocart/<int:product_id>", methods=["POST"])
+def addtocart(product_id):
+    cart = []
+    try:
+        cart = session["cart"]
+    except:
+        print("No other item")
+    cart.append(product_id)
+    session["cart"] = cart
+    return redirect(url_for('cart'))
+
+@app.route("/cart", methods=['POST', 'GET'])
 def cart():
+    cart = []
+    try:
+        cart = session["cart"]
+    except:
+        print("No other item")
+    productlist = []
     for i in cart:
-        name = cart[i].get_productName
-    return render_template("product.html")
+        products = Product.query.filter_by(productid=i).first()
+        productlist.append(products)
+    cart_Form = forms.cartForm(request.form)
+    while len(cart_Form.productQuantity) != len(cart):
+        cart_Form.productQuantity.append_entry()
+        print(cart_Form.productQuantity)
+    if request.method == "POST":
+
+        quantity = cart_Form.productQuantity.data
+        print(quantity)
+        session["quantity"] = quantity
+        return redirect(url_for('checkout'))
+
+    return render_template("cart.html", len=len, cart=productlist, form=cart_Form)
 
 @app.route("/checkout", methods=["GET", "POST"])
 def checkout():
@@ -260,6 +291,23 @@ def checkout():
         expiry_year = checkoutForm.expiry_year.data
         billing_address = checkoutForm.billing_address.data
         postal_code = checkoutForm.postal_code.data
+        quantity = session["quantity"]
+        cart = session["cart"]
+        user = User.query.filter_by(id=current_user.id).first()
+        order = Orders()
+
+        for i in range(len(cart)):
+            product = Product.query.filter_by(productid=cart[i]).first()
+            order_product = Orderproduct(quantity=quantity[i])
+            order_product.product = product
+            order.order_product.append(order_product)
+
+        user.orders.append(order)
+
+        db.session.add(order)
+        db.session.add(order_product)
+        db.session.commit()
+
         return redirect(url_for("index"))
     return render_template("checkout.html", form=checkoutForm)
 

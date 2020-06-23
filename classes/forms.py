@@ -9,6 +9,8 @@ from wtforms import (
     FloatField,
     IntegerField,
     TextAreaField,
+    FieldList,
+    FormField
 )
 from wtforms.validators import InputRequired, Email, Length, Optional
 
@@ -48,3 +50,17 @@ class addProductForm(Form):
     productPrice = FloatField('Product Price:', [InputRequired()])
     productQuantity = IntegerField('Product Quantity:', [InputRequired()])
     submit = SubmitField('Save')
+
+class Checkout(Form):
+    name = StringField("Name on card")
+    cardNum = TextAreaField("Credit Card Number")
+    CVV = IntegerField("CVV")
+    expiry_month = IntegerField("Expiry Month")
+    expiry_year = IntegerField("Expiry Year")
+    billing_address = StringField("Billing Address")
+    postal_code = IntegerField("Postal Code")
+
+
+class cartForm(Form):
+    productQuantity = FieldList(IntegerField(""), min_entries=1, max_entries=10)
+
