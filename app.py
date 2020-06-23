@@ -22,6 +22,7 @@ from classes.models import db, User, Role, Product, Review, Orders, Orderproduct
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
+
 app = Flask(__name__)
 
 app.secret_key = os.urandom(16)
@@ -31,6 +32,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+
 
 db.init_app(app)
 with app.app_context():
@@ -349,12 +351,17 @@ def checkout():
 def getProducts():
     return redirect('admin')
 
-
 @app.route('/products/new', methods=['GET', 'POST'])
 def addProduct():
     form = forms.addProductForm(request.form)
     if request.method == "POST" and form.validate():
-        product = Product(product_name=form.productName.data, description=form.productDescription.data, price=form.productPrice.data, quantity=form.productQuantity.data)
+        if request.files:
+            image = request.files[form.image.name]
+            print(image)
+            image.save(os.path.join('static/images', image.filename))
+            print(os.path.join('static/images', image.filename))
+            filename = "images/%s" % image.filename
+        product = Product(product_name=form.productName.data, description=form.productDescription.data, image=filename, price=form.productPrice.data, quantity=form.productQuantity.data)
         db.session.add(product)
         db.session.commit()
         flash(f'Product {{ form.productName }} added successfully', 'success')
@@ -369,6 +376,7 @@ def update_product(product_id):
     if form.validate():
         products.product_name = form.productName.data
         products.description = form.productDescription.data
+        product.image = form.image.data
         products.price = form.productPrice.data
         products.quantity = form.productQuantity.data
         db.session.commit()
@@ -377,6 +385,7 @@ def update_product(product_id):
     elif request.method == 'GET':
         form.productName.data = products.product_name
         form.productDescription.data = products.description
+        form.image.data = products.image
         form.productPrice.data = products.price
         form.productQuantity.data = products.quantity
     return render_template('addProduct.html', legend='Update Product', form=form)
