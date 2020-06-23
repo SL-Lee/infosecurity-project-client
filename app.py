@@ -18,9 +18,8 @@ from flask_login import (
     logout_user
 )
 from classes import forms
-from classes.models import db, User, Role, Product, Review, Orders, Orderproduct
+from classes.models import db, User, Role, Product, Review, Orders, Orderproduct, CreditCard, Address
 from werkzeug.security import generate_password_hash, check_password_hash
-
 import os
 
 
@@ -128,6 +127,42 @@ def profile():
             db.session.commit()
             return redirect(url_for("profile"))
     return render_template("profile.html", current_user=current_user, form=form)
+
+
+@app.route("/cards")
+@login_required
+def cards():
+    return render_template("cards.html", current_user=current_user)
+
+
+@app.route("/cards/add", methods=["GET", "POST"])
+@login_required
+def addcards():
+    form = forms.CreditForm(request.form)
+    if request.method == "POST" and form.validate():
+        user = User.query.filter_by(id=current_user.id).first()
+        user.creditcards.append(CreditCard(cardnumber=form.cardnumber.data, cvv=form.cvv.data, expiry=form.expiry.data))
+        db.session.commit()
+        return redirect(url_for("cards"))
+    return render_template("addcards.html", current_user=current_user, form=form)
+
+
+@app.route("/addresses")
+@login_required
+def addresses():
+    return render_template("addresses.html", current_user=current_user)
+
+
+@app.route("/addresses/add", methods=["GET", "POST"])
+@login_required
+def addaddresses():
+    form = forms.AddressForm(request.form)
+    if request.method == "POST" and form.validate():
+        user = User.query.filter_by(id=current_user.id).first()
+        user.addresses.append(Address(address=form.address.data, state=form.state.data, city=form.city.data, zip_code=form.zip_code.data))
+        db.session.commit()
+        return redirect(url_for("addresses"))
+    return render_template("addaddresses.html", current_user=current_user, form=form)
 
 
 @app.route("/profile/delete")

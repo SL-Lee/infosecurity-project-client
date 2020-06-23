@@ -10,7 +10,8 @@ from wtforms import (
     IntegerField,
     TextAreaField,
     FieldList,
-    FormField
+    FormField,
+    DateField
 )
 from wtforms.validators import InputRequired, Email, Length, Optional
 from flask_wtf.file import FileField
@@ -39,10 +40,24 @@ class UpdateForm(Form):
     newpassword = PasswordField("New Password", [Length(min=8, max=80), Optional()])
 
 
+class AddressForm(Form):
+    address = StringField("Address", [Length(max=120), InputRequired()])
+    zip_code = IntegerField("Zip Code", [InputRequired()])
+    city = StringField("City", [InputRequired(), Length(min=1, max=176)])
+    state = StringField("State", [InputRequired(), Length(min=4, max=100)])
+
+
+class CreditForm(Form):
+    cardnumber = IntegerField("Card Number", [InputRequired()])
+    cvv = IntegerField("CVV", [InputRequired()])
+    expiry = DateField("Expiry (mm/yy)", [InputRequired()], format="%m/%y")
+
+
 class AdminCreateForm(Form):
     email = StringField("Email", [InputRequired(), Email("Please enter your email address"), Length(max=120)])
     username = StringField("Username", [InputRequired(), Length(min=4, max=25)])
     password = PasswordField("Password", [InputRequired(), Length(min=8, max=80)])
+
 
 class addProductForm(Form):
     productName = StringField('Product Name:', [InputRequired(), Length(max=100)])
