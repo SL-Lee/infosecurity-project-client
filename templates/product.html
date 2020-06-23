@@ -24,7 +24,7 @@
 <h1>{{ product.product_name }}</h1>
 <div id="product-details" class="row">
   <div id="product-img-container" class="col-12 col-md-6 d-flex justify-content-center">
-    <img src="https://fossil.scene7.com/is/image/FossilPartners/ZB7938001_main?$sfcc_fos_medium$" />
+    <img src="{{ url_for('static', filename=product.image) }}" />
   </div>
   <div class="col-12 col-md-6">
     <h2>Description</h2>

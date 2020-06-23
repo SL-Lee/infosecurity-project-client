@@ -13,7 +13,7 @@ from wtforms import (
     FormField
 )
 from wtforms.validators import InputRequired, Email, Length, Optional
-
+from flask_wtf.file import FileField
 
 class LoginForm(Form):
     username = StringField("Username", [InputRequired(), Length(min=4, max=15)])
@@ -49,6 +49,7 @@ class addProductForm(Form):
     productDescription = TextAreaField('Product Description:', [InputRequired()])
     productPrice = FloatField('Product Price:', [InputRequired()])
     productQuantity = IntegerField('Product Quantity:', [InputRequired()])
+    image = FileField('Product Image:')
     submit = SubmitField('Save')
 
 class Checkout(Form):
@@ -63,4 +64,3 @@ class Checkout(Form):
 
 class cartForm(Form):
     productQuantity = FieldList(IntegerField(""), min_entries=1, max_entries=10)
-
