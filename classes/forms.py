@@ -15,7 +15,7 @@ from wtforms import (
     ValidationError
 )
 from wtforms.validators import InputRequired, Email, Length, Optional
-from flask_wtf.file import FileField
+from flask_wtf.file import FileField, FileRequired
 
 
 def integer_length_check(min=-1, max=-1):
@@ -77,7 +77,7 @@ class addProductForm(Form):
     productDescription = TextAreaField('Product Description:', [InputRequired()])
     productPrice = FloatField('Product Price:', [InputRequired()])
     productQuantity = IntegerField('Product Quantity:', [InputRequired()])
-    image = FileField('Product Image:', [InputRequired()])
+    image = FileField('Product Image:', [FileRequired()])
     submit = SubmitField('Save')
 
 class Checkout(Form):
