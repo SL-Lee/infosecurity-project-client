@@ -19,23 +19,24 @@
             <div class="col-sm-9">
                 <h3>Credit/Debit Cards - <button class="btn btn-success" onclick="location.href='/cards/add'">Add</button></h3>
                 <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Card Number</th>
-                      <th>CVV</th>
-                      <th>Expiry</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for card in current_user.creditcards %}
-                      <tr>
-                        <td>{{ card.cardnumber }}</td>
-                        <td>{{ card.cvv }}</td>
-                        <td>{{ card.expiry }}</td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
+                    <thead>
+                        <tr>
+                        <th>Card Number</th>
+                        <th>CVV</th>
+                        <th>Expiry</th>
+                        <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in current_user.creditcards %}
+                            <tr>
+                            <td>{{ card.cardnumber }}</td>
+                            <td>{{ card.cvv }}</td>
+                            <td>{{ card.expiry }}</td>
+                            <td><button class="btn btn-danger" onclick="location.href='/cards/remove/{{ card.cardnumber }}'">Remove</button></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
                 </table>
             </div>
         </div>

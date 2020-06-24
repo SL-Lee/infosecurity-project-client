@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from flask import (
     flash,
     Flask,
@@ -141,10 +141,25 @@ def addcards():
     form = forms.CreditForm(request.form)
     if request.method == "POST" and form.validate():
         user = User.query.filter_by(id=current_user.id).first()
-        user.creditcards.append(CreditCard(cardnumber=form.cardnumber.data, cvv=form.cvv.data, expiry=form.expiry.data))
+        expiry = form.expiry.data
+        if expiry.month < 12:
+            expiry = datetime.date(expiry.year, expiry.month+1, expiry.day) - datetime.timedelta(days=1)
+        if expiry.month == 12:
+            expiry = datetime.date(expiry.year+1, 1, expiry.day) - datetime.timedelta(days=1)
+        user.creditcards.append(CreditCard(cardnumber=form.cardnumber.data, cvv=form.cvv.data, expiry=expiry))
         db.session.commit()
         return redirect(url_for("cards"))
     return render_template("addcards.html", current_user=current_user, form=form)
+
+
+@app.route("/cards/remove/<int:cardnumber>", methods=["GET", "POST"])
+@login_required
+def removecard(cardnumber):
+    user = User.query.filter_by(id=current_user.id).first()
+    removed = CreditCard.query.filter_by(cardnumber=cardnumber).first()
+    user.creditcards.remove(removed)
+    db.session.commit()
+    return redirect(url_for("cards"))
 
 
 @app.route("/addresses")
@@ -163,6 +178,16 @@ def addaddresses():
         db.session.commit()
         return redirect(url_for("addresses"))
     return render_template("addaddresses.html", current_user=current_user, form=form)
+
+
+@app.route("/addresses/remove/<int:addresse_id>")
+@login_required
+def removeaddresses(addresse_id):
+    user = User.query.filter_by(id=current_user.id).first()
+    removed = Address.query.filter_by(id=addresse_id).first()
+    user.addresses.remove(removed)
+    db.session.commit()
+    return redirect(url_for("addresses"))
 
 
 @app.route("/profile/delete")

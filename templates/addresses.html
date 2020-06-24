@@ -35,6 +35,7 @@
                                 <td>{{ address.city }}</td>
                                 <td>{{ address.state }}</td>
                                 <td>{{ address.zip_code }}</td>
+                                <td><button class="btn btn-danger" onclick="location.href='/addresses/remove/{{ address.id }}'">Remove</button></td>
                             </tr>
                         {% endfor %}
                     </tbody>
