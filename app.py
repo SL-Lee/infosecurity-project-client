@@ -68,12 +68,18 @@ def login():
             user = db.session.execute("SELECT * FROM user WHERE username = '%s' and password = '%s'" % (form.username.data, form.password.data))
             id = [row[0] for row in user]
             user = User.query.filter_by(id=id[0]).first()
+            if user.status == False:
+                user.status = True
+                db.session.commit()
             login_user(user, remember=form.remember.data)
             return redirect(url_for("profile"))
             """
             user = User.query.filter_by(username=form.username.data).first()
             if user:
                 if check_password_hash(user.password, form.password.data):
+                    if user.status == False:
+                        user.status = True
+                        db.session.commit()
                     login_user(user, remember=form.remember.data)
                     return redirect(url_for("profile"))
             return redirect(url_for("login"))
@@ -235,7 +241,7 @@ def updateaddress(address_id):
 def deleteprofile():
     deletedUser = User.query.filter_by(id=current_user.id).first()
     logout_user()
-    db.session.delete(deletedUser)
+    deletedUser.status = False
     db.session.commit()
     return redirect(url_for("index"))
 
@@ -270,7 +276,7 @@ def staffsignup():
 @login_required
 def adminDelete(user_id):
     deletedUser = User.query.filter_by(id=user_id).first()
-    db.session.delete(deletedUser)
+    deletedUser.status = False
     db.session.commit()
     return redirect(url_for("admin"))
 

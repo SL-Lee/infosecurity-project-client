@@ -40,7 +40,7 @@
       </thead>
       <tbody>
         {% for user in users %}
-          <tr>
+          <tr {% if user.status == False %}class="strikeout"{% endif %}>
             <td>{{ user.id }}</td>
             <td>{{ user.username }}</td>
             <td>{{ user.email }}</td>
