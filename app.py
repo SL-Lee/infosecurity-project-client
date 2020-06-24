@@ -23,7 +23,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.datastructures import CombinedMultiDict
 import os
 
-
 app = Flask(__name__)
 
 app.secret_key = os.urandom(16)
@@ -33,7 +32,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-
 
 db.init_app(app)
 with app.app_context():
@@ -480,12 +478,11 @@ def addProduct():
         return redirect(url_for("product", product_id=product.productid))
     return render_template('addProduct.html', form=form)
 
-
 @app.route('/products/<int:product_id>/update', methods=['GET', 'POST'])
 def update_product(product_id):
     products = Product.query.get(product_id)
-    form = forms.addProductForm(request.form)
-    if form.validate():
+    form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
+    if request.method == 'POST' and form.validate():
         products.product_name = form.productName.data
         products.description = form.productDescription.data
         product.image = form.image.data
@@ -506,7 +503,7 @@ def update_product(product_id):
 @app.route('/products/<int:product_id>/delete', methods=["GET", "POST"])
 def delete_product(product_id):
     products = Product.query.filter_by(productid=product_id).first()
-    db.session.delete(products)
+    products.deleted = True
     db.session.commit()
     flash('Your product has been deleted!', 'success')
     return redirect(url_for('getProducts'))
