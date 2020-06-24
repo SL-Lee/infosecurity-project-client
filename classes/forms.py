@@ -11,10 +11,23 @@ from wtforms import (
     TextAreaField,
     FieldList,
     FormField,
-    DateField
+    DateField,
+    ValidationError
 )
 from wtforms.validators import InputRequired, Email, Length, Optional
 from flask_wtf.file import FileField
+
+
+def integer_length_check(min=-1, max=-1):
+    message = "The length of the integer must be between %d and %d characters." % (min, max)
+
+    def _integer_length_check(form, field):
+        l = len(str(field.data))
+        if l < min or (max != -1 and l > max):
+            raise ValidationError(message)
+
+    return _integer_length_check
+
 
 class LoginForm(Form):
     username = StringField("Username", [InputRequired(), Length(min=4, max=15)])
@@ -42,14 +55,14 @@ class UpdateForm(Form):
 
 class AddressForm(Form):
     address = StringField("Address", [Length(max=120), InputRequired()])
-    zip_code = IntegerField("Zip Code", [InputRequired()])
+    zip_code = IntegerField("Zip Code", [InputRequired(), integer_length_check(max=10)])
     city = StringField("City", [InputRequired(), Length(min=1, max=176)])
     state = StringField("State", [InputRequired(), Length(min=4, max=100)])
 
 
 class CreditForm(Form):
-    cardnumber = IntegerField("Card Number", [InputRequired()])
-    cvv = IntegerField("CVV", [InputRequired()])
+    cardnumber = IntegerField("Card Number", [InputRequired(), integer_length_check(min=13, max=19)])
+    cvv = IntegerField("CVV", [InputRequired(), integer_length_check(min=3, max=4)])
     expiry = DateField("Expiry (mm/yy)", [InputRequired()], format="%m/%y")
 
 
