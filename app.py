@@ -20,6 +20,7 @@ from flask_login import (
 from classes import forms
 from classes.models import db, User, Role, Product, Review, Orders, Orderproduct, CreditCard, Address
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.datastructures import CombinedMultiDict
 import os
 
 
@@ -411,7 +412,7 @@ def getProducts():
 
 @app.route('/products/new', methods=['GET', 'POST'])
 def addProduct():
-    form = forms.addProductForm(request.form)
+    form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
     if request.method == "POST" and form.validate():
         if request.files:
             image = request.files[form.image.name]

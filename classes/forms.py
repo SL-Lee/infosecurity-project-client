@@ -77,7 +77,7 @@ class addProductForm(Form):
     productDescription = TextAreaField('Product Description:', [InputRequired()])
     productPrice = FloatField('Product Price:', [InputRequired()])
     productQuantity = IntegerField('Product Quantity:', [InputRequired()])
-    image = FileField('Product Image:', [FileRequired()])
+    image = FileField('Product Image:', validators=[FileRequired()])
     submit = SubmitField('Save')
 
 class Checkout(Form):
