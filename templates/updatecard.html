@@ -17,32 +17,20 @@
                 <p><img src="{{ url_for('static', filename='images/house-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('addresses') }}">Address</a></p>
             </div>
             <div class="col-sm-9">
-                <h3>Credit/Debit Cards - <button class="btn btn-success" onclick="location.href='/cards/add'">Add</button></h3>
-                <table class="table">
-                    <thead>
-                        <tr>
-                        <th>Card Number</th>
-                        <th>CVV</th>
-                        <th>Expiry</th>
-                        <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for card in current_user.creditcards %}
-                            <tr>
-                                <td>{{ card.cardnumber }}</td>
-                                <td>{{ card.cvv }}</td>
-                                <td>{{ card.expiry }}</td>
-                                <td>
-                                    <div class="btn-group">
-                                        <button class="btn btn-warning" onclick="location.href='/cards/update/{{ card.id }}'">Update</button>
-                                        <button class="btn btn-danger" onclick="location.href='/cards/remove/{{ card.id }}'">Remove</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <h3>Credit Number - {{ card.cardnumber }}</h3>
+                <form class="form" method="POST">
+                    {{ form.csrf_token }}
+                    <div class="form-group">
+                        {{ render_field(form.cardnumber, class="form-control") }}
+                    </div>
+                    <div class="form-group">
+                        {{ render_field(form.cvv, class="form-control") }}
+                    </div>
+                    <div class="form-group">
+                        {{ render_field(form.expiry, class="form-control") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
             </div>
         </div>
     </div>

@@ -144,7 +144,7 @@ def addcards():
         expiry = form.expiry.data
         if expiry.month < 12:
             expiry = datetime.date(expiry.year, expiry.month+1, expiry.day) - datetime.timedelta(days=1)
-        if expiry.month == 12:
+        elif expiry.month == 12:
             expiry = datetime.date(expiry.year+1, 1, expiry.day) - datetime.timedelta(days=1)
         user.creditcards.append(CreditCard(cardnumber=form.cardnumber.data, cvv=form.cvv.data, expiry=expiry))
         db.session.commit()
@@ -152,14 +152,32 @@ def addcards():
     return render_template("addcards.html", current_user=current_user, form=form)
 
 
-@app.route("/cards/remove/<int:cardnumber>", methods=["GET", "POST"])
+@app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
 @login_required
-def removecard(cardnumber):
+def removecard(card_id):
     user = User.query.filter_by(id=current_user.id).first()
-    removed = CreditCard.query.filter_by(cardnumber=cardnumber).first()
+    removed = CreditCard.query.filter_by(id=card_id).first()
     user.creditcards.remove(removed)
     db.session.commit()
     return redirect(url_for("cards"))
+
+
+@app.route("/cards/update/<int:card_id>", methods=["GET", "POST"])
+@login_required
+def updatecard(card_id):
+    form = forms.CreditForm(request.form)
+    card = CreditCard.query.filter_by(id=card_id).first()
+    if request.method == "POST" and form.validate():
+        card.cardnumber = form.cardnumber.data
+        card.cvv = form.cvv.data
+        expiry = form.expiry.data
+        if expiry.month < 12:
+            card.expiry = datetime.date(expiry.year, expiry.month+1, expiry.day) - datetime.timedelta(days=1)
+        elif expiry.month == 12:
+            card.expiry = datetime.date(expiry.year+1, 1, expiry.day) - datetime.timedelta(days=1)
+        db.session.commit()
+        return redirect(url_for("cards"))
+    return render_template("updatecard.html", current_user=current_user, form=form, card=card)
 
 
 @app.route("/addresses")
@@ -188,6 +206,21 @@ def removeaddresses(addresse_id):
     user.addresses.remove(removed)
     db.session.commit()
     return redirect(url_for("addresses"))
+
+
+@app.route("/addresses/update/<int:address_id>", methods=["GET", "POST"])
+@login_required
+def updateaddress(address_id):
+    form = forms.AddressForm(request.form)
+    address = Address.query.filter_by(id=address_id).first()
+    if request.method == "POST" and form.validate():
+        address.address = form.address.data
+        address.state = form.state.data
+        address.city = form.city.data
+        address.zip_code = form.zip_code.data
+        db.session.commit()
+        return redirect(url_for("addresses"))
+    return render_template("updateaddress.html", current_user=current_user, form=form, address=address)
 
 
 @app.route("/profile/delete")

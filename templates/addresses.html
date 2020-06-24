@@ -35,7 +35,12 @@
                                 <td>{{ address.city }}</td>
                                 <td>{{ address.state }}</td>
                                 <td>{{ address.zip_code }}</td>
-                                <td><button class="btn btn-danger" onclick="location.href='/addresses/remove/{{ address.id }}'">Remove</button></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-warning" onclick="location.href='/addresses/update/{{ address.id }}'">Update</button>
+                                        <button class="btn btn-danger" onclick="location.href='/addresses/remove/{{ address.id }}'">Remove</button>
+                                    </div>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
