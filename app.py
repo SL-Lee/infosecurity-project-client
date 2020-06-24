@@ -63,20 +63,23 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = forms.LoginForm(request.form)
-    if request.method == "POST" and form.validate():
-        user = db.session.execute("SELECT * FROM user WHERE username = '%s' and password = '%s'" % (form.username.data, form.password.data))
-        id = [row[0] for row in user]
-        user = User.query.filter_by(id=id[0]).first()
-        login_user(user, remember=form.remember.data)
-        return redirect(url_for("profile"))
-        """
-        user = User.query.filter_by(username=form.username.data).first()
-        if user:
-            if check_password_hash(user.password, form.password.data):
-                login_user(user, remember=form.remember.data)
-                return redirect(url_for("profile"))
-        return redirect(url_for("login"))
-        """
+    if db.session.query(User).count() != 0:
+        if request.method == "POST" and form.validate():
+            user = db.session.execute("SELECT * FROM user WHERE username = '%s' and password = '%s'" % (form.username.data, form.password.data))
+            id = [row[0] for row in user]
+            user = User.query.filter_by(id=id[0]).first()
+            login_user(user, remember=form.remember.data)
+            return redirect(url_for("profile"))
+            """
+            user = User.query.filter_by(username=form.username.data).first()
+            if user:
+                if check_password_hash(user.password, form.password.data):
+                    login_user(user, remember=form.remember.data)
+                    return redirect(url_for("profile"))
+            return redirect(url_for("login"))
+            """
+    else:
+        return redirect(url_for("signup"))
     return render_template("login.html", form=form)
 
 
@@ -84,23 +87,26 @@ def login():
 def signup():
     form = forms.RegisterForm(request.form)
     if request.method == "POST" and form.validate():
-        hashedPassword = generate_password_hash(form.password.data, method="sha256")
-        newUser = User(username=form.username.data, email=form.email.data, password=form.password.data)
-        customer = Role.query.filter_by(name="Customer").first()
-        customer.users.append(newUser)
-        if User.query.filter_by(id="1").first().id == 1 and len(User.query.filter_by(id="1").first().roles) == 1:
-            staff = Role.query.filter_by(name="Staff").first()
-            staff.users.append(User.query.filter_by(id="1").first())
-            seller = Role.query.filter_by(name="Seller").first()
-            seller.users.append(User.query.filter_by(id="1").first())
-            admin = Role.query.filter_by(name="Admin").first()
-            admin.users.append(User.query.filter_by(id="1").first())
-        elif User.query.filter_by(id="2").first().id == 2 and len(User.query.filter_by(id="2").first().roles) == 1:
-            seller = Role.query.filter_by(name="Seller").first()
-            seller.users.append(User.query.filter_by(id="2").first())
-        db.session.add(newUser)
-        db.session.commit()
-        return redirect(url_for("login"))
+        if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
+            hashedPassword = generate_password_hash(form.password.data, method="sha256")
+            newUser = User(username=form.username.data, email=form.email.data, password=form.password.data)
+            customer = Role.query.filter_by(name="Customer").first()
+            customer.users.append(newUser)
+            if User.query.filter_by(id="1").first().id == 1 and len(User.query.filter_by(id="1").first().roles) == 1:
+                staff = Role.query.filter_by(name="Staff").first()
+                staff.users.append(User.query.filter_by(id="1").first())
+                seller = Role.query.filter_by(name="Seller").first()
+                seller.users.append(User.query.filter_by(id="1").first())
+                admin = Role.query.filter_by(name="Admin").first()
+                admin.users.append(User.query.filter_by(id="1").first())
+            elif User.query.filter_by(id="2").first().id == 2 and len(User.query.filter_by(id="2").first().roles) == 1:
+                seller = Role.query.filter_by(name="Seller").first()
+                seller.users.append(User.query.filter_by(id="2").first())
+            db.session.add(newUser)
+            db.session.commit()
+            return redirect(url_for("login"))
+        else:
+            return redirect(url_for("signup"))
     return render_template("signup.html", form=form)
 
 
@@ -245,15 +251,18 @@ def admin():
 def staffsignup():
     form = forms.AdminCreateForm(request.form)
     if request.method == "POST" and form.validate():
-        hashedPassword = generate_password_hash(form.password.data, method="sha256")
-        newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
-        customer = Role.query.filter_by(name="Customer").first()
-        customer.users.append(newUser)
-        staff = Role.query.filter_by(name="Staff").first()
-        staff.users.append(newUser)
-        db.session.add(newUser)
-        db.session.commit()
-        return redirect(url_for("admin"))
+        if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
+            hashedPassword = generate_password_hash(form.password.data, method="sha256")
+            newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
+            customer = Role.query.filter_by(name="Customer").first()
+            customer.users.append(newUser)
+            staff = Role.query.filter_by(name="Staff").first()
+            staff.users.append(newUser)
+            db.session.add(newUser)
+            db.session.commit()
+            return redirect(url_for("admin"))
+        else:
+            return redirect(url_for("staffsignup"))
     return render_template("signup.html", form=form)
 
 
