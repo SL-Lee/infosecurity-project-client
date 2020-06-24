@@ -290,15 +290,30 @@ def product(product_id):
     if sort_by != "lowest-rating":
         reviews.reverse()
 
+    user_bought = False
     if current_user.is_authenticated:
         user_review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
-        if user_review is not None:
+        if user_review is None:
+            user_orders = Orders.query.filter_by(user_id=current_user.id).all()
+            if user_orders is not None:
+                for i in user_orders:
+                    break_outer_loop = False
+                    for j in i.order_product:
+                        if j.product == product:
+                            user_bought = True
+                            break_outer_loop = True
+                            break
+
+                    if break_outer_loop:
+                        break
+        else:
+            user_bought = True
             form.review_rating.data = str(user_review.rating)
             form.review_contents.data = user_review.contents
     else:
         user_review = None
 
-    return render_template("product.html", product=product, form=form, reviews=reviews, user_review=user_review)
+    return render_template("product.html", product=product, form=form, reviews=reviews, user_review=user_review, user_bought=user_bought)
 
 
 @app.route("/add_review/<int:user_id>/<int:product_id>", methods=["POST"])
@@ -310,6 +325,29 @@ def add_review(user_id, product_id):
         product = Product.query.filter_by(productid=product_id).first()
         if None in [user, product]:
             print("No such user and/or product.")
+            return redirect(url_for("product", product_id=product_id))
+
+        review = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+        if review is not None:
+            print("User already submitted a review for this product.")
+            return redirect(url_for("product", product_id=product_id))
+
+        user_orders = Orders.query.filter_by(user_id=current_user.id).all()
+        user_bought = False
+        if user_orders is not None:
+            for i in user_orders:
+                break_outer_loop = False
+                for j in i.order_product:
+                    if j.product == product:
+                        user_bought = True
+                        break_outer_loop = True
+                        break
+
+                if break_outer_loop:
+                    break
+
+        if not user_bought:
+            print("User haven't bought the product.")
             return redirect(url_for("product", product_id=product_id))
 
         review = Review(rating=form.review_rating.data, contents=form.review_contents.data)
