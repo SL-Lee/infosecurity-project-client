@@ -279,7 +279,7 @@ def adminDelete(user_id):
     return redirect(url_for("admin"))
 
 
-@app.route("/product/<int:product_id>")
+@app.route("/product/<int:product_id>", methods=["GET", "POST"])
 def product(product_id):
     form = forms.ReviewForm(request.form)
     product = Product.query.filter_by(productid=product_id).first_or_404()
@@ -401,6 +401,19 @@ def addtocart(product_id):
     cart.append(product_id)
     session["cart"] = cart
     return redirect(url_for('cart'))
+
+
+@app.route("/deletefromcart/<int:product_id>", methods=["POST", 'GET'])
+def deletefromcart(product_id):
+    cart = session["cart"]
+    for i in range(len(cart)):
+        if cart[i] == product_id:
+            cart.pop(i)
+            break
+    session["cart"] = cart
+    print(cart)
+    return redirect(url_for('cart'))
+
 
 @app.route("/cart", methods=['POST', 'GET'])
 def cart():

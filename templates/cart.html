@@ -10,10 +10,10 @@
                 <th scope="col">ID</th>
                 <th scope="col">Name</th>
                 <th scope="col">Description</th>
-                <th scope="col">Brand</th>
                 <th scope="col">Price</th>
                 <th scope="col">Quantity</th>
                 <th scope="col">View</th>
+                <th scope="col">Delete</th>
             </tr>
         </thead>
         <tbody>
@@ -22,10 +22,10 @@
                 <td>{{ cart[i].productid }}</td>
                 <td>{{ cart[i].product_name }}</td>
                 <td>{{ cart[i].description }}</td>
-                <td>{{ cart[i].brand }}</td>
                 <td>{{ cart[i].price }}</td>
                 <td>{{ render_field(form.productQuantity.entries[i], class="form-control") }}</td>
-                <td><a href="{{ url_for('product', product_id=cart[i].productid) }}" class="btn btn-primary btn-sm m-1">View</a></td>
+                <td><a href="{{ url_for('product', product_id=cart[i].productid) }}" class="btn btn-primary">View</a></td>
+                <td><a href="{{ url_for('deletefromcart', product_id=cart[i].productid) }}" class="btn btn-danger">Delete</a></td>
             </tr>
         {% endfor %}
         </tbody>

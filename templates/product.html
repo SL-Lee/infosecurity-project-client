@@ -30,7 +30,7 @@
     <h2>Description</h2>
     <p>{{ product.description }}</p>
     <h3><b>${{ product.price }}</b></h3>
-    <form method="POST" onsubmit="return false;">
+    <form method="POST" action="{{ url_for('addtocart', product_id=product.productid) }}">
       <div class="form-group">
         <label for="quantity-field">Quantity:</label>
         <input class="form-control" type="number" name="quantity" min="1" max="5" value="1" placeholder="Quantity" />

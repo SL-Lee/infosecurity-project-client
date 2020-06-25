@@ -91,4 +91,4 @@ class Checkout(Form):
 
 
 class cartForm(Form):
-    productQuantity = FieldList(IntegerField(""), min_entries=1, max_entries=10)
+    productQuantity = FieldList(IntegerField(""), min_entries=0, max_entries=10)
