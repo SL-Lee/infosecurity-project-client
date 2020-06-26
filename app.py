@@ -402,7 +402,7 @@ def addtocart(product_id, quantity):
     product = Product.query.filter_by(productid=product_id).first_or_404()
 
     if quantity > product.quantity or product.quantity == 0:
-        flash("There is not enough quantity")
+        flash("There is not enough quantity", "warning")
         return redirect(url_for("index"))
     else:
         try:

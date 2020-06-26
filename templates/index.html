@@ -12,16 +12,6 @@
     object-fit: cover;
   }
 </style>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <body onload="alert(
-    {% for message in messages %}
-      '{{ message }}'
-    {% endfor %}
-    )" class=flashes>
-    </body>
-  {% endif %}
-{% endwith %}
 <h1>XYZ Store</h1>
 <p>Welcome to XYZ Store.</p>
 {% if products %}

@@ -24,17 +24,6 @@
   display: none;
   }
 </style>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <div onload="alert(
-    {% for message in messages %}
-      {{ message }}
-    {% endfor %}
-    )" class=flashes>
-
-    </div>
-  {% endif %}
-{% endwith %}
 <h1>{{ product.product_name }}</h1>
 <div id="product-details" class="row">
   <div id="product-img-container" class="col-12 col-md-6 d-flex justify-content-center">
