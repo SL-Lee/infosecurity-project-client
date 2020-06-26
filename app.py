@@ -282,6 +282,7 @@ def adminDelete(user_id):
 @app.route("/product/<int:product_id>", methods=["GET", "POST"])
 def product(product_id):
     form = forms.ReviewForm(request.form)
+    productQuantity = forms.productQuantity(request.form)
     product = Product.query.filter_by(productid=product_id).first_or_404()
     reviews = Review.query.filter_by(product_id=product_id).order_by(Review.rating).all()
     sort_by = request.args.get("sort-by")
@@ -311,7 +312,12 @@ def product(product_id):
     else:
         user_review = None
 
-    return render_template("product.html", product=product, form=form, reviews=reviews, user_review=user_review, user_bought=user_bought)
+    if productQuantity.submit.data and productQuantity.validate():
+        quantity = productQuantity.productQuantity.data
+        return redirect(url_for("addtocart", product_id=product_id, quantity=quantity))
+
+
+    return render_template("product.html", product=product, form=form, reviews=reviews, user_review=user_review, user_bought=user_bought, productQuantity=productQuantity)
 
 
 @app.route("/add_review/<int:user_id>/<int:product_id>", methods=["POST"])
@@ -391,44 +397,76 @@ def delete_review(user_id, product_id):
     return redirect(url_for('product', product_id=product_id))
 
 
-@app.route("/addtocart/<int:product_id>", methods=["POST"])
-def addtocart(product_id):
-    cart = []
-    try:
-        cart = session["cart"]
-    except:
-        print("No other item")
-    cart.append(product_id)
-    session["cart"] = cart
-    return redirect(url_for('cart'))
+@app.route("/addtocart/<int:product_id>/<int:quantity>", methods=["GET", "POST"])
+def addtocart(product_id, quantity):
+    product = Product.query.filter_by(productid=product_id).first_or_404()
+
+    if quantity > product.quantity or product.quantity == 0:
+        flash("There is not enough quantity")
+        return redirect(url_for("index"))
+    else:
+        try:
+            cart = session["cart"]
+            product = cart[0]
+            product = {int(k):int(v) for k,v in product.items()}
+            if product_id in product:
+                qt = product[product_id]
+                product[product_id] = int(qt) + int(quantity)
+                cart[0] = product
+                session["cart"] = cart
+                print(cart)
+                return redirect(url_for('cart'))
+        except:
+            print("No other item")
+            cart = []
+            product = dict()
+        product[int(product_id)] = int(quantity)
+        print(product)
+        if len(cart) == 0:
+            cart.append(product)
+        else:
+            cart[0] = product
+        session["cart"] = cart
+
+        return redirect(url_for('cart'))
 
 
 @app.route("/deletefromcart/<int:product_id>", methods=["POST", 'GET'])
 def deletefromcart(product_id):
     cart = session["cart"]
-    for i in range(len(cart)):
-        if cart[i] == product_id:
-            cart.pop(i)
+    product = cart[0]
+    print(product)
+    print(product_id)
+    for i in product:
+        print(i)
+        if int(i) == int(product_id):
+            product.pop(i)
+            cart[0] = product
             break
     session["cart"] = cart
-    print(cart)
+
     return redirect(url_for('cart'))
 
 
 @app.route("/cart", methods=['POST', 'GET'])
 def cart():
     cart = []
+    product = {}
+    cart.append(product)
     try:
         cart = session["cart"]
+        print(cart)
+        product = cart[0]
     except:
         print("No other item")
     productlist = []
-    for i in cart:
+    for i in product:
         products = Product.query.filter_by(productid=i).first()
         productlist.append(products)
     cart_Form = forms.cartForm(request.form)
-    while len(cart_Form.productQuantity) != len(cart):
-        cart_Form.productQuantity.append_entry()
+    while len(cart_Form.productQuantity) != len(cart[0]):
+        for i in cart[0]:
+            cart_Form.productQuantity.append_entry(cart[0][i])
         print(cart_Form.productQuantity)
     if request.method == "POST":
 
@@ -440,6 +478,7 @@ def cart():
     return render_template("cart.html", len=len, cart=productlist, form=cart_Form)
 
 @app.route("/checkout", methods=["GET", "POST"])
+@login_required
 def checkout():
     checkoutForm = forms.Checkout(request.form)
     if request.method == "POST":
@@ -450,14 +489,15 @@ def checkout():
         expiry_year = checkoutForm.expiry_year.data
         billing_address = checkoutForm.billing_address.data
         postal_code = checkoutForm.postal_code.data
-        quantity = session["quantity"]
+
         cart = session["cart"]
+        products = cart[0]
         user = User.query.filter_by(id=current_user.id).first()
         order = Orders()
 
-        for i in range(len(cart)):
-            product = Product.query.filter_by(productid=cart[i]).first()
-            order_product = Orderproduct(quantity=quantity[i])
+        for i in products:
+            product = Product.query.filter_by(productid=i).first()
+            order_product = Orderproduct(quantity=products[i])
             order_product.product = product
             order.order_product.append(order_product)
 

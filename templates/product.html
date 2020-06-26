@@ -20,7 +20,21 @@
   #product-reviews .card {
     margin: 20px 0;
   }
+  p.no-label>label{
+  display: none;
+  }
 </style>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div onload="alert(
+    {% for message in messages %}
+      {{ message }}
+    {% endfor %}
+    )" class=flashes>
+
+    </div>
+  {% endif %}
+{% endwith %}
 <h1>{{ product.product_name }}</h1>
 <div id="product-details" class="row">
   <div id="product-img-container" class="col-12 col-md-6 d-flex justify-content-center">
@@ -30,13 +44,15 @@
     <h2>Description</h2>
     <p>{{ product.description }}</p>
     <h3><b>${{ product.price }}</b></h3>
-    <form method="POST" action="{{ url_for('addtocart', product_id=product.productid) }}">
+
+    <form method="POST">
       <div class="form-group">
-        <label for="quantity-field">Quantity:</label>
-        <input class="form-control" type="number" name="quantity" min="1" max="5" value="1" placeholder="Quantity" />
+        <p>Quantity:</p>
+        <p class="no-label">{{ render_field(productQuantity.productQuantity, class="form-control") }}</p>
       </div>
-      <button class="btn btn-primary">Add to Cart</button>
+        {{ render_field(productQuantity.submit, class="btn btn-primary", value="Add to cart") }}
     </form>
+
   </div>
 </div>
 <div id="product-reviews">

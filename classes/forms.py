@@ -12,7 +12,7 @@ from wtforms import (
     FieldList,
     FormField,
     DateField,
-    ValidationError
+    ValidationError,
 )
 from wtforms.validators import InputRequired, Email, Length, Optional
 from flask_wtf.file import FileField, FileRequired
@@ -91,4 +91,8 @@ class Checkout(Form):
 
 
 class cartForm(Form):
-    productQuantity = FieldList(IntegerField(""), min_entries=0, max_entries=10)
+    productQuantity = FieldList(IntegerField(""), InputRequired(), min_entries=0, max_entries=10)
+
+class productQuantity(Form):
+    productQuantity = IntegerField("")
+    submit = SubmitField(label="")

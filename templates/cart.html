@@ -3,6 +3,13 @@
 
 {% block content %}
 {% from "includes/_form_helper.html" import render_field %}
+<style>
+td.no-label>label{
+display: none;
+}
+</style>
+
+
 <form method="post">
     <table class="table table-hover">
         <thead>
@@ -23,7 +30,7 @@
                 <td>{{ cart[i].product_name }}</td>
                 <td>{{ cart[i].description }}</td>
                 <td>{{ cart[i].price }}</td>
-                <td>{{ render_field(form.productQuantity.entries[i], class="form-control") }}</td>
+                <td class="no-label">{{ render_field(form.productQuantity.entries[i], class="form-control") }}</td>
                 <td><a href="{{ url_for('product', product_id=cart[i].productid) }}" class="btn btn-primary">View</a></td>
                 <td><a href="{{ url_for('deletefromcart', product_id=cart[i].productid) }}" class="btn btn-danger">Delete</a></td>
             </tr>

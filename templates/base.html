@@ -22,6 +22,9 @@
         <li class="nav-item">
           <a class="nav-link" href="/">Store</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('cart') }}">Cart</a>
+        </li>
         {% if current_user.is_authenticated %}
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
@@ -41,6 +44,7 @@
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('signup') }}">Signup</a>
         </li>
+
         {% endif %}
         <li class="nav-item">
           <form class="form-inline" action="{{ url_for('search') }}">

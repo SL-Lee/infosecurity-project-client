@@ -83,7 +83,7 @@
             <td>{{ product.quantity }}</td>
             <td>
               <div class="btn-group">
-                <button class="btn btn-primary" onclick="location.href='/products/{{ product.productid }}'">View</button>
+                <button class="btn btn-primary" onclick="location.href='/product/{{ product.productid }}'">View</button>
                 {% for i in current_user.roles %}
                   {% if i.name == "Seller" %}
                     <button class="btn btn-warning" onclick="location.href='/products/{{ product.productid }}/update'">Update</button>
