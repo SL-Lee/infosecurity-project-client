@@ -65,12 +65,16 @@ def login():
         if request.method == "POST" and form.validate():
             user = db.session.execute("SELECT * FROM user WHERE username = '%s' and password = '%s'" % (form.username.data, form.password.data))
             id = [row[0] for row in user]
-            user = User.query.filter_by(id=id[0]).first()
-            if user.status == False:
-                user.status = True
-                db.session.commit()
-            login_user(user, remember=form.remember.data)
-            return redirect(url_for("profile"))
+            if len(id) > 0:
+                user = User.query.filter_by(id=id[0]).first()
+                if user.status == False:
+                    user.status = True
+                    db.session.commit()
+                login_user(user, remember=form.remember.data)
+                return redirect(url_for("profile"))
+            else:
+                flash("Username/Password is incorrect, please try again", category="danger")
+                return redirect(url_for("login"))
             """
             user = User.query.filter_by(username=form.username.data).first()
             if user:
@@ -80,6 +84,7 @@ def login():
                         db.session.commit()
                     login_user(user, remember=form.remember.data)
                     return redirect(url_for("profile"))
+            flash("Username/Password is incorrect, please try again", category="danger")
             return redirect(url_for("login"))
             """
     else:
@@ -126,7 +131,8 @@ def logout():
 def profile():
     form = forms.UpdateForm(request.form)
     if request.method == "POST" and form.validate():
-        if check_password_hash(current_user.password, form.currentpassword.data):
+        # if check_password_hash(current_user.password, form.currentpassword.data):
+        if current_user.password == form.currentpassword.data:
             user = User.query.filter_by(id=current_user.id).first()
             if form.email.data != "":
                 user.email = form.email.data

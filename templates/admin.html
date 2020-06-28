@@ -59,7 +59,7 @@
     </table>
   </div>
 {% endif %}
-{% if current_user.roles[1].name == "Seller" or current_user.roles[1].name == "Staff" %}
+{% if current_user.roles|length > 1 and (current_user.roles[1].name == "Seller" or current_user.roles[1].name == "Staff") %}
   <h2>Products - {% for roles in current_user.roles %}{% if roles.name == "Seller" %}<button class="btn btn-success" onclick="location.href='/products/new'">Create</button>{% endif %}{% endfor %}</h2>
   <div class="table-container">
     <table class="table">
