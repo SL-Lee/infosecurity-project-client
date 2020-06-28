@@ -22,6 +22,7 @@ from classes.models import db, User, Role, Product, Review, Orders, Orderproduct
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.datastructures import CombinedMultiDict
 import os
+import pickle
 
 app = Flask(__name__)
 
@@ -71,7 +72,7 @@ def login():
                     user.status = True
                     db.session.commit()
                 login_user(user, remember=form.remember.data)
-                return redirect(url_for("profile"))
+                return redirect(url_for("index"))
             else:
                 flash("Username/Password is incorrect, please try again", category="danger")
                 return redirect(url_for("login"))
@@ -147,6 +148,11 @@ def profile():
             db.session.commit()
             return redirect(url_for("profile"))
     return render_template("profile.html", current_user=current_user, form=form)
+
+@app.route("/orders")
+@login_required
+def orders():
+    return render_template("orders.html", current_user=current_user)
 
 
 @app.route("/cards")
@@ -415,14 +421,18 @@ def addtocart(product_id, quantity):
         return redirect(url_for("index"))
     else:
         try:
-            cart = session["cart"]
+            pickledb = open("cart", "rb")
+            cart = pickle.load(pickledb)
+
+            # cart = session["cart"]
             product = cart[0]
             product = {int(k):int(v) for k,v in product.items()}
             if product_id in product:
                 qt = product[product_id]
                 product[product_id] = int(qt) + int(quantity)
                 cart[0] = product
-                session["cart"] = cart
+                pickledb = open("cart", "wb")
+                pickle.dump(cart, pickledb)
                 print(cart)
                 return redirect(url_for('cart'))
         except:
@@ -435,14 +445,18 @@ def addtocart(product_id, quantity):
             cart.append(product)
         else:
             cart[0] = product
-        session["cart"] = cart
+        # session["cart"] = cart
+        pickledb = open("cart", "wb")
+        pickle.dump(cart, pickledb)
 
         return redirect(url_for('cart'))
 
 
 @app.route("/deletefromcart/<int:product_id>", methods=["POST", 'GET'])
 def deletefromcart(product_id):
-    cart = session["cart"]
+    pickledb = open("cart", "rb")
+    cart = pickle.load(pickledb)
+    # cart = session["cart"]
     product = cart[0]
     print(product)
     print(product_id)
@@ -452,8 +466,8 @@ def deletefromcart(product_id):
             product.pop(i)
             cart[0] = product
             break
-    session["cart"] = cart
-
+    pickledb = open("cart", "wb")
+    pickle.dump(cart, pickledb)
     return redirect(url_for('cart'))
 
 
@@ -463,7 +477,9 @@ def cart():
     product = {}
     cart.append(product)
     try:
-        cart = session["cart"]
+        pickledb = open("cart", "rb")
+        cart = pickle.load(pickledb)
+        # cart = session["cart"]
         print(cart)
         product = cart[0]
     except:
@@ -481,7 +497,14 @@ def cart():
 
         quantity = cart_Form.productQuantity.data
         print(quantity)
-        session["quantity"] = quantity
+        print(len(product))
+        x = 0
+        for i in product:
+            product[i] = quantity[x]
+            x += 1
+        cart[0] = product
+        pickledb = open("cart", "wb")
+        pickle.dump(cart, pickledb)
         return redirect(url_for('checkout'))
 
     return render_template("cart.html", len=len, cart=productlist, form=cart_Form)
@@ -490,18 +513,38 @@ def cart():
 @login_required
 def checkout():
     checkoutForm = forms.Checkout(request.form)
-    if request.method == "POST":
-        name = checkoutForm.name.data
-        cardNum = checkoutForm.cardNum.data
-        CVV = checkoutForm.CVV.data
-        expiry_month = checkoutForm.expiry_month.data
-        expiry_year = checkoutForm.expiry_year.data
-        billing_address = checkoutForm.billing_address.data
-        postal_code = checkoutForm.postal_code.data
+    user = User.query.filter_by(id=current_user.id).first()
+    creditcards = user.creditcards
+    addresses = user.addresses
+    cardlist=[(creditcards[i], "Credit Card %d" %(i+1)) for i in range(len(creditcards))]
+    checkoutForm.creditcard.choices = cardlist
+    addresslist=[(addresses[i], "Address %d" %(i+1)) for i in range(len(addresses))]
+    checkoutForm.address.choices = addresslist
 
-        cart = session["cart"]
+    if request.method == "POST":
+        card = ""
+        address1 = ""
+        order_product = ""
+        for i in creditcards:
+            if str(i) == checkoutForm.creditcard.data:
+                card = i
+                break
+        for i in addresses:
+            if str(i) == checkoutForm.address.data:
+                address1 = i
+                break
+
+        cardNum = card.cardnumber
+        CVV = card.cvv
+        expiry = card.expiry
+        address = address1.address
+        city = address1.city
+        state = address1.state
+        zip_code = address1.zip_code
+        pickledb = open("cart", "rb")
+        cart = pickle.load(pickledb)
+        # cart = session["cart"]
         products = cart[0]
-        user = User.query.filter_by(id=current_user.id).first()
         order = Orders()
 
         for i in products:
@@ -515,7 +558,7 @@ def checkout():
         db.session.add(order)
         db.session.add(order_product)
         db.session.commit()
-
+        print("Order successfully added")
         return redirect(url_for("index"))
     return render_template("checkout.html", form=checkoutForm)
 

@@ -81,14 +81,8 @@ class addProductForm(Form):
     submit = SubmitField('Save')
 
 class Checkout(Form):
-    name = StringField("Name on card")
-    cardNum = TextAreaField("Credit Card Number")
-    CVV = IntegerField("CVV")
-    expiry_month = IntegerField("Expiry Month")
-    expiry_year = IntegerField("Expiry Year")
-    billing_address = StringField("Billing Address")
-    postal_code = IntegerField("Postal Code")
-
+    creditcard = SelectField('Credit Card')
+    address = SelectField('Address')
 
 class cartForm(Form):
     productQuantity = FieldList(IntegerField(""), InputRequired(), min_entries=0, max_entries=10)
