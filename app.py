@@ -139,8 +139,11 @@ def profile():
             if form.username.data != "":
                 user.username = form.username.data
             if form.newpassword.data != "":
+                user.password = form.newpassword.data
+                """
                 hashedPassword = generate_password_hash(form.newpassword.data, method="sha256")
                 user.password = hashedPassword
+                """
             db.session.commit()
             return redirect(url_for("profile"))
     return render_template("profile.html", current_user=current_user, form=form)
@@ -262,8 +265,8 @@ def staffsignup():
     form = forms.AdminCreateForm(request.form)
     if request.method == "POST" and form.validate():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
-            hashedPassword = generate_password_hash(form.password.data, method="sha256")
-            newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
+            # hashedPassword = generate_password_hash(form.password.data, method="sha256")
+            newUser = User(username=form.username.data, email=form.email.data, password=form.password.data)
             customer = Role.query.filter_by(name="Customer").first()
             customer.users.append(newUser)
             staff = Role.query.filter_by(name="Staff").first()
