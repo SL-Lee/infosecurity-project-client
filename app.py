@@ -534,13 +534,13 @@ def checkout():
                 address1 = i
                 break
 
-        cardNum = card.cardnumber
-        CVV = card.cvv
-        expiry = card.expiry
-        address = address1.address
-        city = address1.city
-        state = address1.state
-        zip_code = address1.zip_code
+        # cardNum = card.cardnumber
+        # CVV = card.cvv
+        # expiry = card.expiry
+        # address = address1.address
+        # city = address1.city
+        # state = address1.state
+        # zip_code = address1.zip_code
         pickledb = open("cart", "rb")
         cart = pickle.load(pickledb)
         # cart = session["cart"]
