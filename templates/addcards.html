@@ -2,7 +2,7 @@
 {% block title %} Profile - XYZ Store {% endblock %}
 
 {% block content %}
-{% from "includes/_form_helper.html" import render_field %}
+
     <div class="container-fluid content">
         <div class="row justify-content-center">
             <div class="col-sm-12">
@@ -18,20 +18,33 @@
                 <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('orders') }}">Orders</a></p>
             </div>
             <div class="col-sm-9">
-                <form class="form" method="POST">
-                    {{ form.csrf_token }}
-                    <div class="form-group">
-                        {{ render_field(form.cardnumber, class="form-control") }}
-                    </div>
-                    <div class="form-group">
-                        {{ render_field(form.cvv, class="form-control") }}
-                    </div>
-                    <div class="form-group">
-                        {{ render_field(form.expiry, class="form-control") }}
-                    </div>
-                    <button type="submit" class="btn btn-primary">Add</button>
+                <form name="creditForm" onsubmit="alert('Credit Card stored'); return false" method="POST">
+                    <label for="cardnum">Card Number:</label><br>
+                    <input type="text" id="cardnum" name="cardnum"><br>
+
+                    <label for="cvv">CVV:</label><br>
+                    <input type="text" id="cvv" name="cvv"><br>
+
+                    <label for="exp_date">Expiry Date:</label><br>
+                    <input type="date" id="exp_date" name="exp_date"><br>
+                    <br>
+                    <button id="submit-button" type="submit" value="Submit" class="btn btn-primary">Add</button>
                 </form>
+                <script>
+                var submitButton = document.getElementById("submit-button");
+                submitButton.addEventListener("click", e => {
+                  // e.preventDefault();
+                  var myObj = { cardnum: document.forms["creditForm"]["cardnum"].value, cvv: document.forms["creditForm"]["cvv"].value, exp_date: document.forms["creditForm"]["exp_date"].value};
+                  var myJSON = JSON.stringify(myObj);
+                  fetch("{{ url_for('addcards') }}", {"method": "POST", "headers": {
+                      'Content-Type': 'application/json'
+                    },"body": myJSON}).then(response => console.log(response));
+                });
+                </script>
             </div>
         </div>
     </div>
+
+
+
 {% endblock %}
