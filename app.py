@@ -374,8 +374,9 @@ def add_review(user_id, product_id):
         user.reviews.append(review)
         db.session.add(review)
         db.session.commit()
+        flash("Review added successfully.", "success")
     else:
-        print("Review is invalid.")
+        flash("There was an error while adding your review.", "danger")
 
     return redirect(url_for('product', product_id=product_id))
 
@@ -393,8 +394,9 @@ def edit_review(user_id, product_id):
         review.rating = form.review_rating.data
         review.contents = form.review_contents.data
         db.session.commit()
+        flash("Review edited successfully.", "success")
     else:
-        print("Review is invalid.")
+        flash("There was an error while editing your review.", "danger")
 
     return redirect(url_for('product', product_id=product_id))
 
@@ -409,6 +411,7 @@ def delete_review(user_id, product_id):
 
     db.session.delete(review)
     db.session.commit()
+    flash("Review deleted successfully.", "success")
     return redirect(url_for('product', product_id=product_id))
 
 

@@ -105,14 +105,10 @@
 <script>
   window.addEventListener("load", e => {
     var sortBy = (new URL(location.href)).searchParams.get("sort-by");
-    document.getElementById("sort-by-placeholder").innerHTML = sortBy;
+    document.getElementById("sort-by-placeholder").innerHTML = sortBy ? sortBy : "highest-rating";
     if (!sortBy) {
-      document.getElementById("update-sorting-button").click();
-    } else if (sortBy == "highest-rating") {
-      document.querySelector("option[value='lowest-rating']").removeAttribute("selected");
-      document.querySelector("option[value='highest-rating']").setAttribute("selected", "selected");
+      history.replaceState(null, null, "?sort-by=highest-rating");
     } else if (sortBy == "lowest-rating") {
-      document.querySelector("option[value='highest-rating']").removeAttribute("selected");
       document.querySelector("option[value='lowest-rating']").setAttribute("selected", "selected");
     }
   });
