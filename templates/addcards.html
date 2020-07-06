@@ -18,16 +18,19 @@
                 <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('orders') }}">Orders</a></p>
             </div>
             <div class="col-sm-9">
-                <form name="creditForm" onsubmit="alert('Credit Card stored'); return false" method="POST">
+                <form name="creditForm" onsubmit="return false" method="POST">
                     <label for="cardnum">Card Number:</label><br>
-                    <input type="text" id="cardnum" name="cardnum"><br>
-
-                    <label for="cvv">CVV:</label><br>
-                    <input type="text" id="cvv" name="cvv"><br>
-
-                    <label for="exp_date">Expiry Date:</label><br>
-                    <input type="date" id="exp_date" name="exp_date"><br>
-                    <br>
+                    <input class="form-control" type="text" id="cardnum" name="cardnum"><br>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="cvv">CVV:</label>
+                            <input class="form-control" type="text" id="cvv" name="cvv"><br>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="exp_date">Expiry Date:</label><br>
+                            <input class="form-control" type="date" id="exp_date" name="exp_date"><br>
+                        </div>
+                    </div>
                     <button id="submit-button" type="submit" value="Submit" class="btn btn-primary">Add</button>
                 </form>
                 <script>
@@ -38,7 +41,13 @@
                   var myJSON = JSON.stringify(myObj);
                   fetch("{{ url_for('addcards') }}", {"method": "POST", "headers": {
                       'Content-Type': 'application/json'
-                    },"body": myJSON}).then(response => console.log(response));
+                    },"body": myJSON}).then(response => {
+                      if (response.redirected) {
+                        location.href = response.url;
+                       }
+                    }).catch(error => {
+                      console.log(`Something went wrong: ${error}`);
+                    });
                 });
                 </script>
             </div>

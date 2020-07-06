@@ -168,6 +168,7 @@ def addcards():
     try:
         obj = request.json
         cardnum = obj["cardnum"]
+
         cvv = obj["cvv"]
         exp_date = obj["exp_date"]
         year = exp_date[0:4]
@@ -176,6 +177,7 @@ def addcards():
         date = datetime.datetime(int(year), int(month), int(day))
         user.creditcards.append(CreditCard(cardnumber=int(cardnum), cvv=int(cvv), expiry=date))
         db.session.commit()
+        return redirect(url_for("cards"))
     except:
         print("Fail")
     return render_template("addcards.html", current_user=current_user)
