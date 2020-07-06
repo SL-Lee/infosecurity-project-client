@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %} Profile - XYZ Store {% endblock %}
+
+{% block content %}
+{% from "includes/_form_helper.html" import render_field %}
+    <div class="container-fluid content">
+        <div class="row justify-content-center">
+            <div class="col-sm-12">
+                <h4 class="text-center">Welcome to your profile {{ current_user.username }}</h4>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-sm-3">
+                <h4>Details</h4>
+                <p><img src="{{ url_for('static', filename='images/person-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('profile') }}">Profile</a></p>
+                <p><img src="{{ url_for('static', filename='images/credit-card.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('cards') }}">Credit Card</a><img src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}" alt="" width="24" height="24" title="Bootstrap"></p>
+                <p><img src="{{ url_for('static', filename='images/house-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('addresses') }}">Address</a></p>
+                <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('orders') }}">Orders</a></p>
+            </div>
+            <div class="col-sm-9">
+                <h3>Credit/Debit Cards - <button class="btn btn-success" onclick="location.href='/cards/add'">Add</button></h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                        <th>Card Number</th>
+                        <th>CVV</th>
+                        <th>Expiry</th>
+                        <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in current_user.creditcards %}
+                            <tr>
+                                <td>{{ card.cardnumber }}</td>
+                                <td>{{ card.cvv }}</td>
+                                <td>{{ card.expiry }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-warning" onclick="location.href='/cards/update/{{ card.id }}'">Update</button>
+                                        <button class="btn btn-danger" onclick="location.href='/cards/remove/{{ card.id }}'">Remove</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

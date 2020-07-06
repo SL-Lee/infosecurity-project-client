@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+{% from "includes/_form_helper.html" import render_field %}
+
+
+<form method="post">
+ <h3>Credit/Debit Cards - <a class="btn btn-success" onclick="location.href='/cards/add'">Add</a></h3>
+ <p>{{ render_field(form.creditcard) }}</p>
+ <h3>Addresses - <a class="btn btn-success" onclick="location.href='/addresses/add'">Add</a></h3>
+ <p>{{ render_field(form.address) }}</p>
+ <button type="submit" class="btn btn-primary">Buy item</button>
+</form>
+
+
+{% endblock %}

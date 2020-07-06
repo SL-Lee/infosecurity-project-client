@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %} Profile - XYZ Store {% endblock %}
+
+{% block content %}
+{% from "includes/_form_helper.html" import render_field %}
+    <div class="container-fluid content">
+        <div class="row justify-content-center">
+            <div class="col-sm-12">
+                <h4 class="text-center">Welcome to your profile {{ current_user.username }}</h4>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-sm-3">
+                <h4>Details</h4>
+                <p><img src="{{ url_for('static', filename='images/person-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('profile') }}">Profile</a></p>
+                <p><img src="{{ url_for('static', filename='images/credit-card.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('cards') }}">Credit Card</a></p>
+                <p><img src="{{ url_for('static', filename='images/house-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('addresses') }}">Address</a></p>
+                <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('orders') }}">Orders</a><img src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}" alt="" width="24" height="24" title="Bootstrap"></p>
+            </div>
+            <div class="col-sm-9">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Products</th>
+                            <th>Quantity</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in current_user.orders %}
+                            <tr>
+                                <td>
+                                    {{ order.orderid }}
+                                </td>
+                                <td>
+                                    {% for product in order.order_product%}
+                                    <p>{{ product.product.product_name }}</p>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for product in order.order_product%}
+                                    <p>{{ product.quantity }}</p>
+                                    {% endfor %}
+                                </td>
+
+                                <td>
+                                    {% for product in order.order_product%}
+                                    <p><a href="{{ url_for('product', product_id=product.product_id) }}" class="btn btn-primary">View</a></p>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

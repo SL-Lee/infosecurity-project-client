@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<style>
+  .table-container {
+    overflow-x: auto;
+  }
+
+  /* for striking out tr*/
+  table {
+    border-collapse: collapse;
+  }
+  td {
+      position: relative;
+      padding: 5px 10px;
+  }
+  tr.strikeout td:before {
+      content: " ";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      border-bottom: 1px solid #111;
+      width: 100%;
+  }
+</style>
+<h1>{{ current_user.roles[-1].name }} - {{ current_user.username }}</h1>
+{% if current_user.roles[-1].name == "Admin" %}
+  <h2>Users - <button class="btn btn-success" onclick="location.href='/admin/create/user'">Create</button></h2>
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Date Created</th>
+          <th>Roles</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+          <tr {% if user.status == False %}class="strikeout"{% endif %}>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.date_created }}</td>
+            <td>
+              {% for roles in user.roles %}
+                {{ roles.name }}<br>
+              {% endfor %}
+            </td>
+            <td>
+              <button class="btn btn-danger" onclick="confirm('Are you sure you want to delete this account?') && (location.href='/admin/delete/{{ user.id }}')">Delete</button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% if current_user.roles|length > 1 and (current_user.roles[1].name == "Seller" or current_user.roles[1].name == "Staff") %}
+  <h2>Products - {% for roles in current_user.roles %}{% if roles.name == "Seller" %}<button class="btn btn-success" onclick="location.href='/products/new'">Create</button>{% endif %}{% endfor %}</h2>
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+          <tr>
+            <td>{{ product.productid }}</td>
+            <td>{{ product.product_name }}</td>
+            <td>{{ product.description }}</td>
+            <td>${{ product.price }}</td>
+            <td>{{ product.quantity }}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-primary" onclick="location.href='/product/{{ product.productid }}'">View</button>
+                {% for i in current_user.roles %}
+                  {% if i.name == "Seller" %}
+                    <button class="btn btn-warning" onclick="location.href='/products/{{ product.productid }}/update'">Update</button>
+                    <button class="btn btn-danger" onclick="confirm('Are you sure you want to delete this product?') && (location.href='/products/{{ product.productid }}/delete')">Delete</button>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

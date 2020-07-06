@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ product.product_name }} - XYZ Store{% endblock %}
+{% block content %}
+{% from "includes/_form_helper.html" import render_field %}
+{% from "includes/_display_stars.html" import display_stars %}
+<!-- https://www.fossil.com/en-us/products/carmen-shopper/ZB7938001.html -->
+<!-- DOM XSS Attack example: http://localhost:5000/product/1?sort-by=%3Ciframe%20onload=%22alert(%27XSS%27)%22%3E%3C/iframe%3E -->
+<style>
+  #product-img-container > img {
+    max-height: 400px;
+    margin-bottom: 20px;
+  }
+
+  #product-reviews {
+    margin-top: 20px;
+    border-top: 1px solid rgb(192 192 192);
+    padding-top: 20px;
+  }
+
+  #product-reviews .card {
+    margin: 20px 0;
+  }
+  p.no-label>label{
+  display: none;
+  }
+</style>
+<h1>{{ product.product_name }}</h1>
+<div id="product-details" class="row">
+  <div id="product-img-container" class="col-12 col-md-6 d-flex justify-content-center">
+    <img src="{{ url_for('static', filename=product.image) }}" />
+  </div>
+  <div class="col-12 col-md-6">
+    <h2>Description</h2>
+    <p>{{ product.description }}</p>
+    <h3><b>${{ product.price }}</b></h3>
+
+    <form method="POST">
+      <div class="form-group">
+        <p>Quantity:</p>
+        <p class="no-label">{{ render_field(productQuantity.productQuantity, class="form-control") }}</p>
+      </div>
+        {{ render_field(productQuantity.submit, class="btn btn-primary", value="Add to cart") }}
+    </form>
+
+  </div>
+</div>
+<div id="product-reviews">
+  <h2>Reviews</h2>
+  {% if current_user.is_authenticated %}
+  <div class="card">
+    <div class="card-body">
+      {% if user_bought %}
+      <form method="POST" action="{% if user_review is none %}{{ url_for('add_review', user_id=current_user.id, product_id=product.productid) }}{% else %}{{ url_for('edit_review', user_id=current_user.id, product_id=product.productid) }}{% endif %}">
+        <div class="form-group">
+          {{ render_field(form.review_rating) }}
+        </div>
+        <div class="form-group">
+          {{ render_field(form.review_contents) }}
+        </div>
+        {% if user_review is none %}<button class="btn btn-primary">Submit</button>{% else %}<button class="btn btn-warning">Edit</button><button id="delete-review-button" class="btn btn-danger ml-2">Delete</button>{% endif %}
+      </form>
+      {% else %}
+      <p class="text-center text-secondary mb-0">Purchase this product to review it.</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  <div class="card">
+    <div class="card-body">
+      <h3 class="card-title">Sorting reviews by <span id="sort-by-placeholder" style="font-weight: 700;">highest-rating</span></h3>
+      <form>
+        <label for="sort-by-field">Sort By:</label>
+        <select id="sort-by-field" name="sort-by">
+          <option value="highest-rating">Highest Rating</option>
+          <option value="lowest-rating">Lowest Rating</option>
+        </select>
+        <button id="update-sorting-button" class="btn-xs btn-primary">Update</button>
+      </form>
+    </div>
+    <ul class="list-group list-group-flush">
+      {% if reviews %}
+        {% for review in reviews %}
+        <li class="list-group-item">
+          <p><b>{{ review.user.username }}</b> - {{ display_stars(review.rating) }}</p>
+          <pre class="mb-0" style="font-family: inherit; font-size: inherit;">{{ review.contents|safe }}</pre>
+        </li>
+        {% endfor %}
+      {% else %}
+      <p class="text-center text-secondary mt-3">There are no reviews for this product yet.</p>
+      {% endif %}
+    </ul>
+  </div>
+</div>
+{% if current_user.is_authenticated and user_review %}
+<script>
+  var deleteReviewButton = document.getElementById("delete-review-button");
+  deleteReviewButton.addEventListener("click", e => {
+    e.preventDefault();
+    fetch("{{ url_for('delete_review', user_id=current_user.id, product_id=product.productid) }}", {"method": "POST"}).then(response => {
+      location.href = location.href;
+    });
+  });
+</script>
+{% endif %}
+<script>
+  window.addEventListener("load", e => {
+    var sortBy = (new URL(location.href)).searchParams.get("sort-by");
+    document.getElementById("sort-by-placeholder").innerHTML = sortBy ? sortBy : "highest-rating";
+    if (!sortBy) {
+      history.replaceState(null, null, "?sort-by=highest-rating");
+    } else if (sortBy == "lowest-rating") {
+      document.querySelector("option[value='lowest-rating']").setAttribute("selected", "selected");
+    }
+  });
+</script>
+{% endblock %}

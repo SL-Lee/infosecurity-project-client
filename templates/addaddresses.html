@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %} Profile - XYZ Store {% endblock %}
+
+{% block content %}
+{% from "includes/_form_helper.html" import render_field %}
+    <div class="container-fluid content">
+        <div class="row justify-content-center">
+            <div class="col-sm-12">
+                <h4 class="text-center">Welcome to your profile {{ current_user.username }}</h4>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-sm-3">
+                <h4>Details</h4>
+                <p><img src="{{ url_for('static', filename='images/person-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('profile') }}">Profile</a></p>
+                <p><img src="{{ url_for('static', filename='images/credit-card.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('cards') }}">Credit Card</a></p>
+                <p><img src="{{ url_for('static', filename='images/house-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('addresses') }}">Address</a><img src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}" alt="" width="24" height="24" title="Bootstrap"></p>
+                <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('orders') }}">Orders</a></p>
+
+            </div>
+            <div class="col-sm-9">
+                <form name="addressForm" onsubmit="alert('Address stored'); return false" method="POST">
+                    <label for="address">Address:</label><br>
+                    <input type="text" id="address" name="address"><br>
+
+                    <label for="state">state:</label><br>
+                    <input type="text" id="state" name="state"><br>
+
+                    <label for="city">City:</label><br>
+                    <input type="text" id="city" name="city"><br>
+
+                    <label for="zipCode">Zip Code:</label><br>
+                    <input type="text" id="zipCode" name="zipCode"><br>
+                    <br>
+                    <button id="submit-button" type="submit" value="Submit" class="btn btn-primary">Add</button>
+                </form>
+                <script>
+                var submitButton = document.getElementById("submit-button");
+                submitButton.addEventListener("click", e => {
+                  // e.preventDefault();
+                  var myObj = { address: document.forms["addressForm"]["address"].value, state: document.forms["addressForm"]["state"].value, city: document.forms["addressForm"]["city"].value, zipCode: document.forms["addressForm"]["zipCode"].value};
+                  var myJSON = JSON.stringify(myObj);
+                  fetch("{{ url_for('addaddresses') }}", {"method": "POST", "headers": {
+                      'Content-Type': 'application/json'
+                    },"body": myJSON}).then(response => console.log(response));
+                });
+                </script>
+            </div>
+        </div>
+    </div>
+{% endblock %}

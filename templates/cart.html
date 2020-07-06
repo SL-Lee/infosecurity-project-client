@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %} Cart {% endblock %}
+
+{% block content %}
+{% from "includes/_form_helper.html" import render_field %}
+<style>
+td.no-label>label{
+display: none;
+}
+</style>
+
+
+<form method="post">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Description</th>
+                <th scope="col">Price</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">View</th>
+                <th scope="col">Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for i in range(len(cart)) %}
+            <tr>
+                <td>{{ cart[i].productid }}</td>
+                <td>{{ cart[i].product_name }}</td>
+                <td>{{ cart[i].description }}</td>
+                <td>{{ cart[i].price }}</td>
+                <td class="no-label">{{ render_field(form.productQuantity.entries[i], class="form-control") }}</td>
+                <td><a href="{{ url_for('product', product_id=cart[i].productid) }}" class="btn btn-primary">View</a></td>
+                <td><a href="{{ url_for('deletefromcart', product_id=cart[i].productid) }}" class="btn btn-danger">Delete</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Checkout</button>
+</form>
+
+
+{% endblock %}
