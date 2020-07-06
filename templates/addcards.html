@@ -42,9 +42,12 @@
                   fetch("{{ url_for('addcards') }}", {"method": "POST", "headers": {
                       'Content-Type': 'application/json'
                     },"body": myJSON}).then(response => {
-                      if (response.redirected) {
+                      location.href = response.url;
+                      /* if (response.redirected) {
                         location.href = response.url;
-                       }
+                      } else {
+                        return Promise.reject(response);
+                      } */
                     }).catch(error => {
                       console.log(`Something went wrong: ${error}`);
                     });

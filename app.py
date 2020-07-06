@@ -1,5 +1,6 @@
 import datetime
 from flask import (
+    abort,
     flash,
     Flask,
     make_response,
@@ -165,21 +166,24 @@ def cards():
 @login_required
 def addcards():
     user = User.query.filter_by(id=current_user.id).first()
-    try:
-        obj = request.json
-        cardnum = obj["cardnum"]
+    if request.method == "POST":
+        try:
+            print("test")
+            obj = request.json
+            cardnum = obj["cardnum"]
 
-        cvv = obj["cvv"]
-        exp_date = obj["exp_date"]
-        year = exp_date[0:4]
-        month = exp_date[5:7]
-        day = exp_date[8:]
-        date = datetime.datetime(int(year), int(month), int(day))
-        user.creditcards.append(CreditCard(cardnumber=int(cardnum), cvv=int(cvv), expiry=date))
-        db.session.commit()
-        return redirect(url_for("cards"))
-    except:
-        print("Fail")
+            cvv = obj["cvv"]
+            exp_date = obj["exp_date"]
+            print(exp_date)
+            year = exp_date[0:4]
+            month = exp_date[5:7]
+            day = exp_date[8:]
+            date = datetime.datetime(int(year), int(month), int(day))
+            user.creditcards.append(CreditCard(cardnumber=int(cardnum), cvv=int(cvv), expiry=date))
+            db.session.commit()
+            return redirect(url_for("cards"))
+        except:
+            abort(500)
     return render_template("addcards.html", current_user=current_user)
 
 @app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
