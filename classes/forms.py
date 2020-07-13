@@ -81,8 +81,8 @@ class addProductForm(Form):
     submit = SubmitField('Save')
 
 class Checkout(Form):
-    creditcard = SelectField('Credit Card')
-    address = SelectField('Address')
+    creditcard = SelectField('Credit Card - ')
+    address = SelectField('Address - ')
 
 class cartForm(Form):
     productQuantity = FieldList(IntegerField(""), InputRequired(), min_entries=0, max_entries=10)

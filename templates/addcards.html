@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 {% block title %} Profile - XYZ Store {% endblock %}
-
 {% block content %}
 
     <div class="container-fluid content">
@@ -20,11 +19,11 @@
             <div class="col-sm-9">
                 <form name="creditForm" onsubmit="return false" method="POST">
                     <label for="cardnum">Card Number:</label><br>
-                    <input class="form-control" type="text" id="cardnum" name="cardnum"><br>
+                    <input class="form-control" type="number" id="cardnum" name="cardnum"><br>
                     <div class="row">
                         <div class="col-sm-6">
                             <label for="cvv">CVV:</label>
-                            <input class="form-control" type="text" id="cvv" name="cvv"><br>
+                            <input class="form-control" type="number" id="cvv" name="cvv"><br>
                         </div>
                         <div class="col-sm-6">
                             <label for="exp_date">Expiry Date:</label><br>
@@ -41,14 +40,14 @@
                         var myJSON = JSON.stringify(myObj);
                         fetch("{{ url_for('addcards') }}", {"method": "POST", "headers": {
                             'Content-Type': 'application/json'
-                        },"body": myJSON})
+                        }, "body": myJSON})
                         .then(response => {
-                            if (response.redirected) {
-                                return response.text();
-                            }
+                            return response.text();
                         })
                         .then(text => {
+                            document.open();
                             document.write(text);
+                            document.close();
                         })
                         .catch(error => {
                             console.log(`Something went wrong: ${error}`);
