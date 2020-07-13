@@ -181,9 +181,10 @@ def addcards():
             date = datetime.datetime(int(year), int(month), int(day))
             user.creditcards.append(CreditCard(cardnumber=int(cardnum), cvv=int(cvv), expiry=date))
             db.session.commit()
-            return redirect(url_for("cards"))
+            card = CreditCard.query.filter_by(cardnumber=int(cardnum)).first()
+            return redirect(url_for("updatecard", card_id=card.id))
         except:
-            abort(500)
+            return redirect(url_for("updatecard"))
     return render_template("addcards.html", current_user=current_user)
 
 @app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
@@ -505,7 +506,7 @@ def cart():
         print(len(product))
         x = 0
         for i in product:
-            product[i] = quantity[x]
+            product[i] = int(quantity[x])
             x += 1
         cart[0] = product
         session["cart"] = cart

@@ -34,24 +34,26 @@
                     <button id="submit-button" type="submit" value="Submit" class="btn btn-primary">Add</button>
                 </form>
                 <script>
-                var submitButton = document.getElementById("submit-button");
-                submitButton.addEventListener("click", e => {
-                  // e.preventDefault();
-                  var myObj = { cardnum: document.forms["creditForm"]["cardnum"].value, cvv: document.forms["creditForm"]["cvv"].value, exp_date: document.forms["creditForm"]["exp_date"].value};
-                  var myJSON = JSON.stringify(myObj);
-                  fetch("{{ url_for('addcards') }}", {"method": "POST", "headers": {
-                      'Content-Type': 'application/json'
-                    },"body": myJSON}).then(response => {
-                      location.href = response.url;
-                      /* if (response.redirected) {
-                        location.href = response.url;
-                      } else {
-                        return Promise.reject(response);
-                      } */
-                    }).catch(error => {
-                      console.log(`Something went wrong: ${error}`);
+                    var submitButton = document.getElementById("submit-button");
+                    submitButton.addEventListener("click", e => {
+                        e.preventDefault();
+                        var myObj = { cardnum: document.forms["creditForm"]["cardnum"].value, cvv: document.forms["creditForm"]["cvv"].value, exp_date: document.forms["creditForm"]["exp_date"].value};
+                        var myJSON = JSON.stringify(myObj);
+                        fetch("{{ url_for('addcards') }}", {"method": "POST", "headers": {
+                            'Content-Type': 'application/json'
+                        },"body": myJSON})
+                        .then(response => {
+                            if (response.redirected) {
+                                return response.text();
+                            }
+                        })
+                        .then(text => {
+                            document.write(text);
+                        })
+                        .catch(error => {
+                            console.log(`Something went wrong: ${error}`);
+                        });
                     });
-                });
                 </script>
             </div>
         </div>
