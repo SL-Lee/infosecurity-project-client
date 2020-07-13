@@ -1,5 +1,6 @@
 import datetime
 from flask import (
+    abort,
     flash,
     Flask,
     make_response,
@@ -165,21 +166,23 @@ def cards():
 @login_required
 def addcards():
     user = User.query.filter_by(id=current_user.id).first()
-    try:
+    if request.method == "POST":
+        print("test")
         obj = request.json
         cardnum = obj["cardnum"]
 
         cvv = obj["cvv"]
         exp_date = obj["exp_date"]
+        print(exp_date)
         year = exp_date[0:4]
         month = exp_date[5:7]
         day = exp_date[8:]
         date = datetime.datetime(int(year), int(month), int(day))
         user.creditcards.append(CreditCard(cardnumber=int(cardnum), cvv=int(cvv), expiry=date))
         db.session.commit()
+        card = CreditCard.query.filter_by(cardnumber=int(cardnum)).first()
         return redirect(url_for("cards"))
-    except:
-        print("Fail")
+
     return render_template("addcards.html", current_user=current_user)
 
 @app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
@@ -220,7 +223,7 @@ def addresses():
 @login_required
 def addaddresses():
     user = User.query.filter_by(id=current_user.id).first()
-    try:
+    if request.method == "POST":
         obj = request.json
         address = obj["address"]
         state = obj["state"]
@@ -228,8 +231,8 @@ def addaddresses():
         zipCode = obj["zipCode"]
         user.addresses.append(Address(address=address, state=state, city=city, zip_code=int(zipCode)))
         db.session.commit()
-    except:
-        print("Fail")
+        return redirect(url_for("addresses"))
+
     return render_template("addaddresses.html", current_user=current_user)
 
 @app.route("/addresses/remove/<int:addresse_id>")
@@ -501,7 +504,7 @@ def cart():
         print(len(product))
         x = 0
         for i in product:
-            product[i] = quantity[x]
+            product[i] = int(quantity[x])
             x += 1
         cart[0] = product
         session["cart"] = cart
@@ -516,9 +519,9 @@ def checkout():
     user = User.query.filter_by(id=current_user.id).first()
     creditcards = user.creditcards
     addresses = user.addresses
-    cardlist=[(creditcards[i], "Credit Card %d" %(i+1)) for i in range(len(creditcards))]
+    cardlist=[(creditcards[i], "Card %d" %(creditcards[i].cardnumber)) for i in range(len(creditcards))]
     checkoutForm.creditcard.choices = cardlist
-    addresslist=[(addresses[i], "Address %d" %(i+1)) for i in range(len(addresses))]
+    addresslist=[(addresses, "%s" %(addresses[i].address)) for i in range(len(addresses))]
     checkoutForm.address.choices = addresslist
 
     if request.method == "POST":
