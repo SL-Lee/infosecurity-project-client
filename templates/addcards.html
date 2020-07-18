@@ -18,16 +18,18 @@
             </div>
             <div class="col-sm-9">
                 <form name="creditForm" onsubmit="return false" method="POST">
-                    <label for="cardnum">Card Number:</label><br>
-                    <input class="form-control" type="number" id="cardnum" name="cardnum"><br>
-                    <div class="row">
-                        <div class="col-sm-6">
+                    <div class="form-group">
+                        <label for="cardnum">Card Number:</label>
+                        <input class="form-control" type="number" id="cardnum" name="cardnum">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-sm-6">
                             <label for="cvv">CVV:</label>
-                            <input class="form-control" type="number" id="cvv" name="cvv"><br>
+                            <input class="form-control" type="number" id="cvv" name="cvv">
                         </div>
-                        <div class="col-sm-6">
-                            <label for="exp_date">Expiry Date:</label><br>
-                            <input class="form-control" type="date" id="exp_date" name="exp_date"><br>
+                        <div class="form-group col-sm-6">
+                            <label for="exp_date">Expiry Date:</label>
+                            <input class="form-control" type="date" id="exp_date" name="exp_date">
                         </div>
                     </div>
                     <button id="submit-button" type="submit" value="Submit" class="btn btn-primary">Add</button>
@@ -50,14 +52,11 @@
                             document.close();
                         })
                         .catch(error => {
-                            console.log(`Something went wrong: ${error}`);
+                            console.log("Error:", error);
                         });
                     });
                 </script>
             </div>
         </div>
     </div>
-
-
-
 {% endblock %}

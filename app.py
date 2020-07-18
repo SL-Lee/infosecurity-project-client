@@ -622,7 +622,9 @@ def search():
         search_results = []
     else:
         query = query.strip().lower()
-        search_results = [i for i in Product.query.all() if query in i.product_name.lower()]
+        searchtest = db.session.execute("SELECT * FROM products WHERE lower(product_name) LIKE '%{}%'".format(query))
+        search_results = [i for i in searchtest]
+        # search_results = [i for i in Product.query.all() if query in i.product_name.lower()]
 
     return render_template("search.html", query=query, search_results=search_results)
 
