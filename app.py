@@ -496,12 +496,9 @@ def cart():
     while len(cart_Form.productQuantity) != len(cart[0]):
         for i in cart[0]:
             cart_Form.productQuantity.append_entry(cart[0][i])
-        print(cart_Form.productQuantity)
     if request.method == "POST":
 
         quantity = cart_Form.productQuantity.data
-        print(quantity)
-        print(len(product))
         x = 0
         for i in product:
             product[i] = int(quantity[x])
@@ -522,8 +519,17 @@ def checkout():
     cardlist=[(creditcards[i], "Card %d" %(creditcards[i].cardnumber)) for i in range(len(creditcards))]
     checkoutForm.creditcard.choices = cardlist
     addresslist=[(addresses, "%s" %(addresses[i].address)) for i in range(len(addresses))]
-    checkoutForm.address.choices = addresslist
 
+
+    checkoutForm.address.choices = addresslist
+    cart = session["cart"]
+    products = cart[0]
+    productlist = []
+    productquantity = []
+    for i in products:
+            product = Product.query.filter_by(productid=i).first()
+            productlist.append(product)
+            productquantity.append(products[i])
     if request.method == "POST":
         card = ""
         address1 = ""
@@ -544,8 +550,6 @@ def checkout():
         # city = address1.city
         # state = address1.state
         # zip_code = address1.zip_code
-        cart = session["cart"]
-        products = cart[0]
         order = Orders()
 
         for i in products:
@@ -553,15 +557,18 @@ def checkout():
             order_product = Orderproduct(quantity=products[i])
             order_product.product = product
             order.order_product.append(order_product)
+            product.quantity -= products[i]
+            db.session.commit()
 
         user.orders.append(order)
 
         db.session.add(order)
         db.session.add(order_product)
         db.session.commit()
+
         print("Order successfully added")
         return redirect(url_for("index"))
-    return render_template("checkout.html", form=checkoutForm)
+    return render_template("checkout.html", form=checkoutForm, cart=productlist, len=len,productquantity=productquantity)
 
 @app.route('/products', methods=['GET'])
 def getProducts():
@@ -622,7 +629,9 @@ def search():
         search_results = []
     else:
         query = query.strip().lower()
-        search_results = [i for i in Product.query.all() if query in i.product_name.lower()]
+        searchtest = db.session.execute("SELECT * FROM products WHERE lower(product_name) LIKE '%{}%'".format(query))
+        search_results = [i for i in searchtest]
+        # search_results = [i for i in Product.query.all() if query in i.product_name.lower()]
 
     return render_template("search.html", query=query, search_results=search_results)
 

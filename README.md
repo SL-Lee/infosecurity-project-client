@@ -27,3 +27,11 @@ This repository is for our App Security Project.
 > 3. Type in `venv\scripts\activate` and press `Enter`.
 > 4. Type in `pip freeze > requirements.txt` and press `Enter`.
 > 5. Push the changes.
+
+## How to run the application
+
+1. Open a command prompt window and change directory to the project folder (e.g. `C:\Users\{username}\App-Sec-Project`).
+2. If you are using a virtual environment, activate it by typing `venv\scripts\activate` and press `Enter`. If not, then make sure that all packages listed in `requirements.txt` are installed globally, and move on to the next step.
+3. Type in `.\run.bat` and press `Enter`.
+4. The batch file will generate and display a report on any packages with known security vulnerabilities, and pause execution.
+5. Press any key to continue with the execution of the batch file, where it will then proceed to run the web application, and automatically open it in a new browser tab.

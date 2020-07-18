@@ -96,8 +96,14 @@
   var deleteReviewButton = document.getElementById("delete-review-button");
   deleteReviewButton.addEventListener("click", e => {
     e.preventDefault();
-    fetch("{{ url_for('delete_review', user_id=current_user.id, product_id=product.productid) }}", {"method": "POST"}).then(response => {
-      location.href = location.href;
+    fetch("{{ url_for('delete_review', user_id=current_user.id, product_id=product.productid) }}", {"method": "POST"})
+    .then(response => {
+      return response.text();
+    })
+    .then(text => {
+      document.open();
+      document.write(text);
+      document.close();
     });
   });
 </script>
