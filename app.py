@@ -19,7 +19,17 @@ from flask_login import (
     logout_user
 )
 from classes import forms
-from classes.models import db, User, Role, Product, Review, Orders, Orderproduct, CreditCard, Address
+from classes.models import (
+    db,
+    User,
+    Role,
+    Product,
+    Review,
+    Orders,
+    Orderproduct,
+    CreditCard,
+    Address
+)
 from urllib.parse import urlparse, urljoin
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.datastructures import CombinedMultiDict
@@ -600,6 +610,10 @@ def getProducts():
 @app.route('/products/new', methods=['GET', 'POST'])
 @login_required
 def addProduct():
+    current_user_roles = [i.name for i in current_user.roles]
+    if not any(i in ["Admin", "Seller", "Staff"] for i in current_user_roles):
+        return redirect(url_for("index"))
+
     form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
     if request.method == "POST" and form.validate():
         if request.files:
@@ -619,6 +633,10 @@ def addProduct():
 @app.route('/products/<int:product_id>/update', methods=['GET', 'POST'])
 @login_required
 def update_product(product_id):
+    current_user_roles = [i.name for i in current_user.roles]
+    if not any(i in ["Admin", "Seller", "Staff"] for i in current_user_roles):
+        return redirect(url_for("index"))
+
     products = Product.query.get(product_id)
     form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
     if request.method == 'POST' and form.validate():
@@ -642,6 +660,10 @@ def update_product(product_id):
 @app.route('/products/<int:product_id>/delete', methods=["GET", "POST"])
 @login_required
 def delete_product(product_id):
+    current_user_roles = [i.name for i in current_user.roles]
+    if not any(i in ["Admin", "Seller", "Staff"] for i in current_user_roles):
+        return redirect(url_for("index"))
+
     products = Product.query.filter_by(productid=product_id).first()
     products.deleted = True
     db.session.commit()
