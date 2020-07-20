@@ -50,7 +50,7 @@
   <div class="card">
     <div class="card-body">
       {% if user_bought %}
-      <form method="POST" action="{% if user_review is none %}{{ url_for('add_review', user_id=current_user.id, product_id=product.productid) }}{% else %}{{ url_for('edit_review', user_id=current_user.id, product_id=product.productid) }}{% endif %}">
+      <form method="POST" action="{% if user_review is none %}{{ url_for('add_review', product_id=product.productid) }}{% else %}{{ url_for('edit_review', product_id=product.productid) }}{% endif %}">
         <div class="form-group">
           {{ render_field(form.review_rating) }}
         </div>
@@ -96,7 +96,7 @@
   var deleteReviewButton = document.getElementById("delete-review-button");
   deleteReviewButton.addEventListener("click", e => {
     e.preventDefault();
-    fetch("{{ url_for('delete_review', user_id=current_user.id, product_id=product.productid) }}", {"method": "POST"})
+    fetch("{{ url_for('delete_review', product_id=product.productid) }}", {"method": "POST"})
     .then(response => {
       return response.text();
     })

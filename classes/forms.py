@@ -88,5 +88,5 @@ class cartForm(Form):
     productQuantity = FieldList(IntegerField(""), InputRequired(), min_entries=0, max_entries=10)
 
 class productQuantity(Form):
-    productQuantity = IntegerField("")
+    productQuantity = IntegerField("", default=1)
     submit = SubmitField(label="")

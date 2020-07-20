@@ -20,6 +20,7 @@ from flask_login import (
 )
 from classes import forms
 from classes.models import db, User, Role, Product, Review, Orders, Orderproduct, CreditCard, Address
+from urllib.parse import urlparse, urljoin
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.datastructures import CombinedMultiDict
 import os
@@ -34,6 +35,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+login_manager.login_message_category = "danger"
 
 db.init_app(app)
 with app.app_context():
@@ -48,6 +50,13 @@ with app.app_context():
         db.session.add(sellerrole)
         db.session.add(adminrole)
         db.session.commit()
+
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -73,6 +82,11 @@ def login():
                     user.status = True
                     db.session.commit()
                 login_user(user, remember=form.remember.data)
+
+                next_url = request.args.get("next")
+                if next_url is not None and is_safe_url(next_url):
+                    return redirect(next_url)
+
                 return redirect(url_for("index"))
             else:
                 flash("Username/Password is incorrect, please try again", category="danger")
@@ -91,7 +105,7 @@ def login():
             """
     else:
         return redirect(url_for("signup"))
-    return render_template("login.html", form=form)
+    return render_template("login.html", form=form, next=request.args.get("next"))
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -150,6 +164,7 @@ def profile():
             return redirect(url_for("profile"))
     return render_template("profile.html", current_user=current_user, form=form)
 
+
 @app.route("/orders")
 @login_required
 def orders():
@@ -184,6 +199,7 @@ def addcards():
         return redirect(url_for("cards"))
 
     return render_template("addcards.html", current_user=current_user)
+
 
 @app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
 @login_required
@@ -273,6 +289,10 @@ def deleteprofile():
 @app.route("/admin")
 @login_required
 def admin():
+    current_user_roles = [i.name for i in current_user.roles]
+    if not any(i in ["Admin", "Seller", "Staff"] for i in current_user_roles):
+        return redirect(url_for("index"))
+
     return render_template("admin.html", current_user=current_user, users=User.query.order_by(User.id).all(), products=Product.query.order_by(Product.productid).all())
 
 
@@ -346,18 +366,18 @@ def product(product_id):
     return render_template("product.html", product=product, form=form, reviews=reviews, user_review=user_review, user_bought=user_bought, productQuantity=productQuantity)
 
 
-@app.route("/add_review/<int:user_id>/<int:product_id>", methods=["POST"])
+@app.route("/add_review/<int:product_id>", methods=["POST"])
 @login_required
-def add_review(user_id, product_id):
+def add_review(product_id):
     form = forms.ReviewForm(request.form)
     if form.validate():
-        user = User.query.filter_by(id=user_id).first()
+        user = User.query.filter_by(id=current_user.id).first()
         product = Product.query.filter_by(productid=product_id).first()
         if None in [user, product]:
             print("No such user and/or product.")
             return redirect(url_for("product", product_id=product_id))
 
-        review = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+        review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
         if review is not None:
             print("User already submitted a review for this product.")
             return redirect(url_for("product", product_id=product_id))
@@ -392,12 +412,12 @@ def add_review(user_id, product_id):
     return redirect(url_for('product', product_id=product_id))
 
 
-@app.route("/edit_review/<int:user_id>/<int:product_id>", methods=["POST"])
+@app.route("/edit_review/<int:product_id>", methods=["POST"])
 @login_required
-def edit_review(user_id, product_id):
+def edit_review(product_id):
     form = forms.ReviewForm(request.form)
     if form.validate():
-        review = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+        review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
         if review is None:
             print("No such user and/or product, or user haven't submitted a review for this product.")
             return redirect(url_for("product", product_id=product_id))
@@ -412,10 +432,10 @@ def edit_review(user_id, product_id):
     return redirect(url_for('product', product_id=product_id))
 
 
-@app.route("/delete_review/<int:user_id>/<int:product_id>", methods=["POST"])
+@app.route("/delete_review/<int:product_id>", methods=["POST"])
 @login_required
-def delete_review(user_id, product_id):
-    review = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+def delete_review(product_id):
+    review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
     if review is None:
         print("No such user and/or product, or user haven't submitted a review for this product.")
         return redirect(url_for("product", product_id=product_id))
@@ -509,6 +529,7 @@ def cart():
 
     return render_template("cart.html", len=len, cart=productlist, form=cart_Form)
 
+
 @app.route("/checkout", methods=["GET", "POST"])
 @login_required
 def checkout():
@@ -570,11 +591,14 @@ def checkout():
         return redirect(url_for("index"))
     return render_template("checkout.html", form=checkoutForm, cart=productlist, len=len,productquantity=productquantity)
 
+
 @app.route('/products', methods=['GET'])
 def getProducts():
     return redirect('admin')
 
+
 @app.route('/products/new', methods=['GET', 'POST'])
+@login_required
 def addProduct():
     form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
     if request.method == "POST" and form.validate():
@@ -591,7 +615,9 @@ def addProduct():
         return redirect(url_for("product", product_id=product.productid))
     return render_template('addProduct.html', form=form)
 
+
 @app.route('/products/<int:product_id>/update', methods=['GET', 'POST'])
+@login_required
 def update_product(product_id):
     products = Product.query.get(product_id)
     form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
@@ -614,6 +640,7 @@ def update_product(product_id):
 
 
 @app.route('/products/<int:product_id>/delete', methods=["GET", "POST"])
+@login_required
 def delete_product(product_id):
     products = Product.query.filter_by(productid=product_id).first()
     products.deleted = True
@@ -628,10 +655,7 @@ def search():
     if query is None:
         search_results = []
     else:
-        query = query.strip().lower()
-        searchtest = db.session.execute("SELECT * FROM products WHERE lower(product_name) LIKE '%{}%'".format(query))
-        search_results = [i for i in searchtest]
-        # search_results = [i for i in Product.query.all() if query in i.product_name.lower()]
+        search_results = db.session.execute("SELECT * FROM products WHERE lower(product_name) LIKE '%{}%'".format(query.lower()))
 
     return render_template("search.html", query=query, search_results=search_results)
 
