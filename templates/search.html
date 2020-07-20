@@ -16,7 +16,7 @@
 <h1>Search</h1>
 <p>To start a search, type a query in the search bar (in the navigation bar) and press enter.</p>
 {% else %}
-<h1>Search results for "{{ query|safe }}"</h1>
+<h1>Search results for "{{ query }}"</h1>
 {% if search_results %}
 <div class="products row">
   {% for product in search_results %}

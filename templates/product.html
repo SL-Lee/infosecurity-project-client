@@ -82,7 +82,7 @@
         {% for review in reviews %}
         <li class="list-group-item">
           <p><b>{{ review.user.username }}</b> - {{ display_stars(review.rating) }}</p>
-          <pre class="mb-0" style="font-family: inherit; font-size: inherit;">{{ review.contents|safe }}</pre>
+          <pre class="mb-0" style="font-family: inherit; font-size: inherit;">{{ review.contents }}</pre>
         </li>
         {% endfor %}
       {% else %}
@@ -111,7 +111,7 @@
 <script>
   window.addEventListener("load", e => {
     var sortBy = (new URL(location.href)).searchParams.get("sort-by");
-    document.getElementById("sort-by-placeholder").innerHTML = sortBy ? sortBy : "highest-rating";
+    document.getElementById("sort-by-placeholder").innerText = sortBy ? sortBy : "highest-rating";
     if (!sortBy) {
       history.replaceState(null, null, "?sort-by=highest-rating");
     } else if (sortBy == "lowest-rating") {
