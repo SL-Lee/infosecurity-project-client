@@ -300,7 +300,7 @@ def deleteprofile():
 @login_required
 def admin():
     current_user_roles = [i.name for i in current_user.roles]
-    if not any(i in ["Admin", "Seller", "Staff"] for i in current_user_roles):
+    if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
         return redirect(url_for("index"))
 
     return render_template("admin.html", current_user=current_user, users=User.query.order_by(User.id).all(), products=Product.query.order_by(Product.productid).all())
@@ -611,7 +611,7 @@ def getProducts():
 @login_required
 def addProduct():
     current_user_roles = [i.name for i in current_user.roles]
-    if not any(i in ["Admin", "Seller", "Staff"] for i in current_user_roles):
+    if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
         return redirect(url_for("index"))
 
     form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
@@ -634,7 +634,7 @@ def addProduct():
 @login_required
 def update_product(product_id):
     current_user_roles = [i.name for i in current_user.roles]
-    if not any(i in ["Admin", "Seller", "Staff"] for i in current_user_roles):
+    if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
         return redirect(url_for("index"))
 
     products = Product.query.get(product_id)
@@ -661,7 +661,7 @@ def update_product(product_id):
 @login_required
 def delete_product(product_id):
     current_user_roles = [i.name for i in current_user.roles]
-    if not any(i in ["Admin", "Seller", "Staff"] for i in current_user_roles):
+    if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
         return redirect(url_for("index"))
 
     products = Product.query.filter_by(productid=product_id).first()
