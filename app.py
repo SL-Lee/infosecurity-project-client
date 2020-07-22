@@ -56,14 +56,69 @@ csrf.init_app(app)
 with app.app_context():
     db.create_all()
     if db.session.query(Role).count() == 0:
-        customerrole = Role(name="Customer", description="This is a customer account")
-        sellerrole = Role(name="Seller", description="This is a seller account, it manages all product listings")
-        staffrole = Role(name="Staff", description="This is the staff account, it manages the reviews of the products")
-        adminrole = Role(name="Admin", description="This is the master admin account")
-        db.session.add(customerrole)
-        db.session.add(staffrole)
-        db.session.add(sellerrole)
-        db.session.add(adminrole)
+        admin_role = Role(name="Admin", description="This is the master admin account")
+        seller_role = Role(name="Seller", description="This is a seller account, it manages all product listings")
+        staff_role = Role(name="Staff", description="This is the staff account, it manages the reviews of the products")
+        customer_role = Role(name="Customer", description="This is a customer account")
+
+        admin = User(username="admin", email="admin@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
+        seller = User(username="seller", email="seller@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
+        staff = User(username="staff", email="staff@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
+        customer = User(username="customer", email="customer@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
+
+        admin.roles.append(customer_role)
+        admin.roles.append(seller_role)
+        admin.roles.append(staff_role)
+        admin.roles.append(admin_role)
+
+        seller.roles.append(customer_role)
+        seller.roles.append(seller_role)
+
+        staff.roles.append(customer_role)
+        staff.roles.append(staff_role)
+
+        customer.roles.append(customer_role)
+
+        db.session.add(admin_role)
+        db.session.add(seller_role)
+        db.session.add(staff_role)
+        db.session.add(customer_role)
+        db.session.add(admin)
+        db.session.add(seller)
+        db.session.add(staff)
+        db.session.add(customer)
+
+        db.session.add(Address(address="1377 Ridge Road", zip_code=67065, city="Isabel", state="Kansas", user_id=3))
+        db.session.add(Address(address="2337 Millbrook Road", zip_code=60607, city="Chicago", state="Illinois", user_id=1))
+        db.session.add(Address(address="4530 Freedom Lane", zip_code=95202, city="Stockton", state="California", user_id=2))
+        db.session.add(Address(address="1053 Evergreen Lane", zip_code=92614, city="Irvine", state="California", user_id=4))
+
+        db.session.add(CreditCard(cardnumber=4485940457238817, cvv=246, expiry=datetime.datetime.strptime("2023-02-28", "%Y-%m-%d"), user_id=1))
+        db.session.add(CreditCard(cardnumber=2720998970010088, cvv=730, expiry=datetime.datetime.strptime("2022-07-31", "%Y-%m-%d"), user_id=1))
+        db.session.add(CreditCard(cardnumber=344940981257746, cvv=361, expiry=datetime.datetime.strptime("2024-01-31", "%Y-%m-%d"), user_id=2))
+        db.session.add(CreditCard(cardnumber=36504513792803, cvv=375, expiry=datetime.datetime.strptime("2020-09-30", "%Y-%m-%d"), user_id=3))
+        db.session.add(CreditCard(cardnumber=5574741539556674, cvv=816, expiry=datetime.datetime.strptime("2024-05-31", "%Y-%m-%d"), user_id=4))
+        db.session.add(CreditCard(cardnumber=234234, cvv=345, expiry=datetime.datetime.strptime("2020-07-21", "%Y-%m-%d"), user_id=1))
+
+        db.session.add(Product(product_name="Carmen Shopper", description="1 Adjustable & Detachable Crossbody Strap, 2 Handles", image="images/ZB7938001_main.jpg", price=218, quantity=120, deleted=False))
+        db.session.add(Product(product_name="Rachel Tote", description="2 Handles", image="images/ZB7507200_main.jpg", price=198, quantity=250, deleted=False))
+        db.session.add(Product(product_name="Fiona Crossbody", description="1 Adjustable & Detachable Crossbody Strap", image="images/ZB7669200_main.jpg", price=148, quantity=150, deleted=False))
+        db.session.add(Product(product_name="Maya Hobo", description="1 Adjustable & Detachable Crossbody Strap, 1 Short Shoulder Strap", image="images/ZB6979200_main.jpg", price=238, quantity=200, deleted=False))
+
+        db.session.add(Review(user_id=1, product_id=1, rating=5, contents="I love this product!"))
+
+        db.session.add(Orders(user_id=1))
+        db.session.add(Orders(user_id=3))
+        db.session.add(Orders(user_id=3))
+        db.session.add(Orders(user_id=2))
+
+        db.session.add(Orderproduct(order_id=1, product_id=1, quantity=2))
+        db.session.add(Orderproduct(order_id=1, product_id=3, quantity=1))
+        db.session.add(Orderproduct(order_id=2, product_id=1, quantity=4))
+        db.session.add(Orderproduct(order_id=2, product_id=3, quantity=2))
+        db.session.add(Orderproduct(order_id=3, product_id=2, quantity=1))
+        db.session.add(Orderproduct(order_id=4, product_id=1, quantity=1))
+        db.session.add(Orderproduct(order_id=4, product_id=4, quantity=1))
         db.session.commit()
 
 
@@ -77,13 +132,14 @@ def restricted(access_level):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if access_level == "admin page" and ("Admin" not in [i.name for i in current_user.roles] and "Seller" not in [i.name for i in current_user.roles] and "Staff" not in [i.name for i in current_user.roles]):
+            current_user_roles = [i.name for i in current_user.roles]
+            if access_level == "admin page" and not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
                 abort(404)
-            elif access_level == "admin" and "Admin" not in [i.name for i in current_user.roles]:
+            elif access_level == "admin" and "Admin" not in current_user_roles:
                 abort(404)
-            elif access_level == "seller" and "Seller" not in [i.name for i in current_user.roles]:
+            elif access_level == "seller" and "Seller" not in current_user_roles:
                 abort(404)
-            elif access_level == "staff" and "Staff" not in [i.name for i in current_user.roles]:
+            elif access_level == "staff" and "Staff" not in current_user_roles:
                 abort(404)
             return func(*args, **kwargs)
         return wrapper
@@ -103,6 +159,9 @@ def index():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+
     form = forms.LoginForm(request.form)
     if db.session.query(User).count() != 0:
         if request.method == "POST" and form.validate():
@@ -129,6 +188,9 @@ def login():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+
     form = forms.RegisterForm(request.form)
     if request.method == "POST" and form.validate():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
@@ -305,10 +367,6 @@ def deleteprofile():
 @login_required
 @restricted(access_level="admin page")
 def admin():
-    current_user_roles = [i.name for i in current_user.roles]
-    if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
-        return redirect(url_for("index"))
-
     return render_template("admin.html", current_user=current_user, users=User.query.order_by(User.id).all(), products=Product.query.order_by(Product.productid).all())
 
 
@@ -619,10 +677,6 @@ def getProducts():
 @login_required
 @restricted(access_level="seller")
 def addProduct():
-    current_user_roles = [i.name for i in current_user.roles]
-    if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
-        return redirect(url_for("index"))
-
     form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
     if request.method == "POST" and form.validate():
         if request.files:
@@ -643,10 +697,6 @@ def addProduct():
 @login_required
 @restricted(access_level="seller")
 def update_product(product_id):
-    current_user_roles = [i.name for i in current_user.roles]
-    if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
-        return redirect(url_for("index"))
-
     products = Product.query.get(product_id)
     form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
     if request.method == 'POST' and form.validate():
@@ -671,10 +721,6 @@ def update_product(product_id):
 @login_required
 @restricted(access_level="seller")
 def delete_product(product_id):
-    current_user_roles = [i.name for i in current_user.roles]
-    if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
-        return redirect(url_for("index"))
-
     products = Product.query.filter_by(productid=product_id).first()
     products.deleted = True
     db.session.commit()
