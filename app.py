@@ -42,6 +42,8 @@ app.secret_key = os.urandom(16)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
 
+app.config["SESSION_COOKIE_SAMESITE"] = "Strict"
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -680,6 +682,13 @@ def search():
         search_results = db.session.execute("SELECT * FROM products WHERE lower(product_name) LIKE '%{}%'".format(query.lower()))
 
     return render_template("search.html", query=query, search_results=search_results)
+
+
+@app.after_request
+def add_header(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return response
 
 
 if __name__ == "__main__":
