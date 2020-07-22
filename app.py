@@ -196,18 +196,7 @@ def signup():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
             hashedPassword = generate_password_hash(form.password.data, method="sha256")
             newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
-            customer = Role.query.filter_by(name="Customer").first()
-            customer.users.append(newUser)
-            if User.query.filter_by(id="1").first().id == 1 and len(User.query.filter_by(id="1").first().roles) == 1:
-                staff = Role.query.filter_by(name="Staff").first()
-                staff.users.append(User.query.filter_by(id="1").first())
-                seller = Role.query.filter_by(name="Seller").first()
-                seller.users.append(User.query.filter_by(id="1").first())
-                admin = Role.query.filter_by(name="Admin").first()
-                admin.users.append(User.query.filter_by(id="1").first())
-            elif User.query.filter_by(id="2").first().id == 2 and len(User.query.filter_by(id="2").first().roles) == 1:
-                seller = Role.query.filter_by(name="Seller").first()
-                seller.users.append(User.query.filter_by(id="2").first())
+            newUser.roles.append(Role.query.filter_by(name="Customer").first())
             db.session.add(newUser)
             db.session.commit()
             return redirect(url_for("login"))
@@ -367,7 +356,13 @@ def deleteprofile():
 @login_required
 @restricted(access_level="admin page")
 def admin():
-    return render_template("admin.html", current_user=current_user, users=User.query.order_by(User.id).all(), products=Product.query.order_by(Product.productid).all())
+    context = {
+        "current_user": current_user,
+        "users": User.query.order_by(User.id).all(),
+        "products": Product.query.order_by(Product.productid).all(),
+        "current_user_roles": [i.name for i in current_user.roles]
+    }
+    return render_template("admin.html", **context)
 
 
 @app.route("/admin/create/user", methods=["GET", "POST"])
@@ -379,10 +374,8 @@ def staffsignup():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
             hashedPassword = generate_password_hash(form.password.data, method="sha256")
             newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
-            customer = Role.query.filter_by(name="Customer").first()
-            customer.users.append(newUser)
-            staff = Role.query.filter_by(name="Staff").first()
-            staff.users.append(newUser)
+            newUser.roles.append(Role.query.filter_by(name="Customer").first())
+            newUser.roles.append(Role.query.filter_by(name="Staff").first())
             db.session.add(newUser)
             db.session.commit()
             return redirect(url_for("admin"))
