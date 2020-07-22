@@ -20,6 +20,7 @@
             </div>
             <div class="col-sm-9">
                 <form name="addressForm" onsubmit="return false" method="POST">
+                    {{ form.csrf_token }}
                     <div class="form-group">
                         <label for="address">Address:</label>
                         <input type="text" id="address" name="address" class="form-control">

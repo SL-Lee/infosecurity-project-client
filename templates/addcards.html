@@ -18,6 +18,7 @@
             </div>
             <div class="col-sm-9">
                 <form name="creditForm" onsubmit="return false" method="POST">
+                    {{ form.csrf_token }}
                     <div class="form-group">
                         <label for="cardnum">Card Number:</label>
                         <input class="form-control" type="number" id="cardnum" name="cardnum">

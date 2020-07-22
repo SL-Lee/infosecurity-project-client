@@ -19,6 +19,7 @@ from flask_login import (
     logout_user
 )
 from classes import forms
+from classes.forms import csrf
 from classes.models import (
     db,
     User,
@@ -33,6 +34,7 @@ from classes.models import (
 from urllib.parse import urlparse, urljoin
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.datastructures import CombinedMultiDict
+from functools import wraps
 import os
 
 
@@ -50,6 +52,7 @@ login_manager.login_view = "login"
 login_manager.login_message_category = "danger"
 
 db.init_app(app)
+csrf.init_app(app)
 with app.app_context():
     db.create_all()
     if db.session.query(Role).count() == 0:
@@ -70,6 +73,23 @@ def is_safe_url(target):
     return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
+def restricted(access_level):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if access_level == "admin page" and ("Admin" not in [i.name for i in current_user.roles] and "Seller" not in [i.name for i in current_user.roles] and "Staff" not in [i.name for i in current_user.roles]):
+                abort(404)
+            elif access_level == "admin" and "Admin" not in [i.name for i in current_user.roles]:
+                abort(404)
+            elif access_level == "seller" and "Seller" not in [i.name for i in current_user.roles]:
+                abort(404)
+            elif access_level == "staff" and "Staff" not in [i.name for i in current_user.roles]:
+                abort(404)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -86,14 +106,13 @@ def login():
     form = forms.LoginForm(request.form)
     if db.session.query(User).count() != 0:
         if request.method == "POST" and form.validate():
-            user = db.session.execute("SELECT * FROM user WHERE username = '%s' and password = '%s'" % (form.username.data, form.password.data))
-            id = [row[0] for row in user]
-            if len(id) > 0:
-                user = User.query.filter_by(id=id[0]).first()
-                if user.status == False:
-                    user.status = True
-                    db.session.commit()
-                login_user(user, remember=form.remember.data)
+            user = User.query.filter_by(username=form.username.data).first_or_404()
+            if user:
+                if check_password_hash(user.password, form.password.data):
+                    if user.status == False:
+                        user.status = True
+                        db.session.commit()
+                    login_user(user, remember=form.remember.data)
 
                 next_url = request.args.get("next")
                 if next_url is not None and is_safe_url(next_url):
@@ -103,18 +122,6 @@ def login():
             else:
                 flash("Username/Password is incorrect, please try again", category="danger")
                 return redirect(url_for("login"))
-            """
-            user = User.query.filter_by(username=form.username.data).first()
-            if user:
-                if check_password_hash(user.password, form.password.data):
-                    if user.status == False:
-                        user.status = True
-                        db.session.commit()
-                    login_user(user, remember=form.remember.data)
-                    return redirect(url_for("profile"))
-            flash("Username/Password is incorrect, please try again", category="danger")
-            return redirect(url_for("login"))
-            """
     else:
         return redirect(url_for("signup"))
     return render_template("login.html", form=form, next=request.args.get("next"))
@@ -126,7 +133,7 @@ def signup():
     if request.method == "POST" and form.validate():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
             hashedPassword = generate_password_hash(form.password.data, method="sha256")
-            newUser = User(username=form.username.data, email=form.email.data, password=form.password.data)
+            newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
             customer = Role.query.filter_by(name="Customer").first()
             customer.users.append(newUser)
             if User.query.filter_by(id="1").first().id == 1 and len(User.query.filter_by(id="1").first().roles) == 1:
@@ -159,19 +166,15 @@ def logout():
 def profile():
     form = forms.UpdateForm(request.form)
     if request.method == "POST" and form.validate():
-        # if check_password_hash(current_user.password, form.currentpassword.data):
-        if current_user.password == form.currentpassword.data:
-            user = User.query.filter_by(id=current_user.id).first()
+        if check_password_hash(current_user.password, form.currentpassword.data):
+            user = User.query.filter_by(id=current_user.id).first_or_404()
             if form.email.data != "":
                 user.email = form.email.data
             if form.username.data != "":
                 user.username = form.username.data
             if form.newpassword.data != "":
-                user.password = form.newpassword.data
-                """
                 hashedPassword = generate_password_hash(form.newpassword.data, method="sha256")
                 user.password = hashedPassword
-                """
             db.session.commit()
             return redirect(url_for("profile"))
     return render_template("profile.html", current_user=current_user, form=form)
@@ -192,7 +195,7 @@ def cards():
 @app.route("/cards/add", methods=["GET", "POST"])
 @login_required
 def addcards():
-    user = User.query.filter_by(id=current_user.id).first()
+    user = User.query.filter_by(id=current_user.id).first_or_404()
     if request.method == "POST":
         print("test")
         obj = request.json
@@ -207,7 +210,7 @@ def addcards():
         date = datetime.datetime(int(year), int(month), int(day))
         user.creditcards.append(CreditCard(cardnumber=int(cardnum), cvv=int(cvv), expiry=date))
         db.session.commit()
-        card = CreditCard.query.filter_by(cardnumber=int(cardnum)).first()
+        card = CreditCard.query.filter_by(cardnumber=int(cardnum)).first_or_404()
         return redirect(url_for("cards"))
 
     return render_template("addcards.html", current_user=current_user)
@@ -216,8 +219,8 @@ def addcards():
 @app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
 @login_required
 def removecard(card_id):
-    user = User.query.filter_by(id=current_user.id).first()
-    removed = CreditCard.query.filter_by(id=card_id).first()
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+    removed = CreditCard.query.filter_by(id=card_id).first_or_404()
     user.creditcards.remove(removed)
     db.session.commit()
     return redirect(url_for("cards"))
@@ -227,7 +230,7 @@ def removecard(card_id):
 @login_required
 def updatecard(card_id):
     form = forms.CreditForm(request.form)
-    card = CreditCard.query.filter_by(id=card_id).first()
+    card = CreditCard.query.filter_by(id=card_id).first_or_404()
     if request.method == "POST" and form.validate():
         card.cardnumber = form.cardnumber.data
         card.cvv = form.cvv.data
@@ -250,7 +253,7 @@ def addresses():
 @app.route("/addresses/add", methods=["GET", "POST"])
 @login_required
 def addaddresses():
-    user = User.query.filter_by(id=current_user.id).first()
+    user = User.query.filter_by(id=current_user.id).first_or_404()
     if request.method == "POST":
         obj = request.json
         address = obj["address"]
@@ -266,8 +269,8 @@ def addaddresses():
 @app.route("/addresses/remove/<int:addresse_id>")
 @login_required
 def removeaddresses(addresse_id):
-    user = User.query.filter_by(id=current_user.id).first()
-    removed = Address.query.filter_by(id=addresse_id).first()
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+    removed = Address.query.filter_by(id=addresse_id).first_or_404()
     user.addresses.remove(removed)
     db.session.commit()
     return redirect(url_for("addresses"))
@@ -277,7 +280,7 @@ def removeaddresses(addresse_id):
 @login_required
 def updateaddress(address_id):
     form = forms.AddressForm(request.form)
-    address = Address.query.filter_by(id=address_id).first()
+    address = Address.query.filter_by(id=address_id).first_or_404()
     if request.method == "POST" and form.validate():
         address.address = form.address.data
         address.state = form.state.data
@@ -291,7 +294,7 @@ def updateaddress(address_id):
 @app.route("/profile/delete")
 @login_required
 def deleteprofile():
-    deletedUser = User.query.filter_by(id=current_user.id).first()
+    deletedUser = User.query.filter_by(id=current_user.id).first_or_404()
     logout_user()
     deletedUser.status = False
     db.session.commit()
@@ -300,6 +303,7 @@ def deleteprofile():
 
 @app.route("/admin")
 @login_required
+@restricted(access_level="admin page")
 def admin():
     current_user_roles = [i.name for i in current_user.roles]
     if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
@@ -310,12 +314,13 @@ def admin():
 
 @app.route("/admin/create/user", methods=["GET", "POST"])
 @login_required
+@restricted(access_level="admin")
 def staffsignup():
     form = forms.AdminCreateForm(request.form)
     if request.method == "POST" and form.validate():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
-            # hashedPassword = generate_password_hash(form.password.data, method="sha256")
-            newUser = User(username=form.username.data, email=form.email.data, password=form.password.data)
+            hashedPassword = generate_password_hash(form.password.data, method="sha256")
+            newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
             customer = Role.query.filter_by(name="Customer").first()
             customer.users.append(newUser)
             staff = Role.query.filter_by(name="Staff").first()
@@ -330,8 +335,9 @@ def staffsignup():
 
 @app.route("/admin/delete/<int:user_id>")
 @login_required
+@restricted(access_level="admin")
 def adminDelete(user_id):
-    deletedUser = User.query.filter_by(id=user_id).first()
+    deletedUser = User.query.filter_by(id=user_id).first_or_404()
     deletedUser.status = False
     db.session.commit()
     return redirect(url_for("admin"))
@@ -611,6 +617,7 @@ def getProducts():
 
 @app.route('/products/new', methods=['GET', 'POST'])
 @login_required
+@restricted(access_level="seller")
 def addProduct():
     current_user_roles = [i.name for i in current_user.roles]
     if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
@@ -634,6 +641,7 @@ def addProduct():
 
 @app.route('/products/<int:product_id>/update', methods=['GET', 'POST'])
 @login_required
+@restricted(access_level="seller")
 def update_product(product_id):
     current_user_roles = [i.name for i in current_user.roles]
     if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
@@ -661,6 +669,7 @@ def update_product(product_id):
 
 @app.route('/products/<int:product_id>/delete', methods=["GET", "POST"])
 @login_required
+@restricted(access_level="seller")
 def delete_product(product_id):
     current_user_roles = [i.name for i in current_user.roles]
     if not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
@@ -679,7 +688,8 @@ def search():
     if query is None:
         search_results = []
     else:
-        search_results = db.session.execute("SELECT * FROM products WHERE lower(product_name) LIKE '%{}%'".format(query.lower()))
+        query = query.strip().lower()
+        search_results = [i for i in Product.query.all() if query in i.product_name.lower()]
 
     return render_template("search.html", query=query, search_results=search_results)
 
