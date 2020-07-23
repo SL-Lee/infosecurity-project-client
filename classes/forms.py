@@ -15,7 +15,7 @@ from wtforms import (
 )
 from wtforms.validators import InputRequired, Email, Length, Optional
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
+from flask_wtf.file import FileField, FileAllowed
 from flask_wtf.csrf import CSRFProtect
 csrf = CSRFProtect()
 
@@ -78,7 +78,7 @@ class addProductForm(FlaskForm):
     productDescription = TextAreaField('Product Description:', [InputRequired()])
     productPrice = FloatField('Product Price:', [InputRequired()])
     productQuantity = IntegerField('Product Quantity:', [InputRequired()])
-    image = FileField('Product Image:', validators=[FileRequired()])
+    image = FileField('Product Image:', validators=[FileAllowed('jpg', 'png')])
     submit = SubmitField('Save')
 
 class Checkout(FlaskForm):

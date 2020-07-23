@@ -83,11 +83,11 @@ class Product(db.Model):
     __tablename__ = 'products'
     __table_args__ = {'extend_existing': True}
     productid = db.Column(db.Integer, primary_key=True)
-    product_name = db.Column(db.String(100))
-    description = db.Column(db.String(100))
-    image = db.Column(db.String(50))
-    price = db.Column(db.Numeric(10,2))
-    quantity = db.Column(db.Integer)
+    product_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(100), nullable=False)
+    image = db.Column(db.String(50), nullable=False)
+    price = db.Column(db.Numeric(10,2), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
     deleted = db.Column(db.Boolean(), default=False)
 
     query_class = QueryWithSoftDelete
