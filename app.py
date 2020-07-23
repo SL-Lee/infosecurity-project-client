@@ -436,8 +436,10 @@ def product(product_id):
 
 
 @app.route("/add_review/<int:product_id>", methods=["POST"])
-@login_required
 def add_review(product_id):
+    if not current_user.is_authenticated:
+        abort(400)
+
     form = forms.ReviewForm(request.form)
     if form.validate():
         user = User.query.filter_by(id=current_user.id).first()
@@ -482,8 +484,10 @@ def add_review(product_id):
 
 
 @app.route("/edit_review/<int:product_id>", methods=["POST"])
-@login_required
 def edit_review(product_id):
+    if not current_user.is_authenticated:
+        abort(400)
+
     form = forms.ReviewForm(request.form)
     if form.validate():
         review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
@@ -502,8 +506,10 @@ def edit_review(product_id):
 
 
 @app.route("/delete_review/<int:product_id>", methods=["POST"])
-@login_required
 def delete_review(product_id):
+    if not current_user.is_authenticated:
+        abort(400)
+
     review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
     if review is None:
         print("No such user and/or product, or user haven't submitted a review for this product.")
