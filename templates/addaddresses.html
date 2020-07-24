@@ -16,7 +16,6 @@
                 <p><img src="{{ url_for('static', filename='images/credit-card.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('cards') }}">Credit Card</a></p>
                 <p><img src="{{ url_for('static', filename='images/house-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('addresses') }}">Address</a><img src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}" alt="" width="24" height="24" title="Bootstrap"></p>
                 <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('orders') }}">Orders</a></p>
-
             </div>
             <div class="col-sm-9">
                 <form name="addressForm" onsubmit="return false" method="POST">
@@ -36,7 +35,6 @@
                         <label for="zipCode">Zip Code:</label>
                         <input type="text" id="zipCode" name="zipCode" class="form-control">
                     </div>
-
                     <button id="submit-button" type="submit" value="Submit" class="btn btn-primary">Add</button>
                 </form>
                 <script>
@@ -45,9 +43,14 @@
                         e.preventDefault();
                         var myObj = { address: document.forms["addressForm"]["address"].value, state: document.forms["addressForm"]["state"].value, city: document.forms["addressForm"]["city"].value, zipCode: document.forms["addressForm"]["zipCode"].value};
                         var myJSON = JSON.stringify(myObj);
-                        fetch("{{ url_for('addaddresses') }}", {"method": "POST", "headers": {
-                            'Content-Type': 'application/json'
-                        },"body": myJSON})
+                        fetch("{{ url_for('addaddresses') }}", {
+                            "method": "POST",
+                            "headers": {
+                                'Content-Type': 'application/json',
+                                "X-CSRFToken": "{{ csrf_token() }}"
+                            },
+                            "body": myJSON
+                        })
                         .then(response => {
                             return response.text();
                         })

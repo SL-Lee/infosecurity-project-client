@@ -19,9 +19,22 @@ from flask_login import (
     logout_user
 )
 from classes import forms
-from classes.models import db, User, Role, Product, Review, Orders, Orderproduct, CreditCard, Address
+from classes.forms import csrf
+from classes.models import (
+    db,
+    User,
+    Role,
+    Product,
+    Review,
+    Orders,
+    Orderproduct,
+    CreditCard,
+    Address
+)
+from urllib.parse import urlparse, urljoin
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.datastructures import CombinedMultiDict
+from functools import wraps
 import os
 
 
@@ -31,23 +44,107 @@ app.secret_key = os.urandom(16)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
 
+app.config["SESSION_COOKIE_SAMESITE"] = "Strict"
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+login_manager.login_message_category = "danger"
 
 db.init_app(app)
+csrf.init_app(app)
 with app.app_context():
     db.create_all()
     if db.session.query(Role).count() == 0:
-        customerrole = Role(name="Customer", description="This is a customer account")
-        sellerrole = Role(name="Seller", description="This is a seller account, it manages all product listings")
-        staffrole = Role(name="Staff", description="This is the staff account, it manages the reviews of the products")
-        adminrole = Role(name="Admin", description="This is the master admin account")
-        db.session.add(customerrole)
-        db.session.add(staffrole)
-        db.session.add(sellerrole)
-        db.session.add(adminrole)
+        admin_role = Role(name="Admin", description="This is the master admin account")
+        seller_role = Role(name="Seller", description="This is a seller account, it manages all product listings")
+        staff_role = Role(name="Staff", description="This is the staff account, it manages the reviews of the products")
+        customer_role = Role(name="Customer", description="This is a customer account")
+
+        admin = User(username="admin", email="admin@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
+        seller = User(username="seller", email="seller@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
+        staff = User(username="staff", email="staff@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
+        customer = User(username="customer", email="customer@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
+
+        admin.roles.append(customer_role)
+        admin.roles.append(seller_role)
+        admin.roles.append(staff_role)
+        admin.roles.append(admin_role)
+
+        seller.roles.append(customer_role)
+        seller.roles.append(seller_role)
+
+        staff.roles.append(customer_role)
+        staff.roles.append(staff_role)
+
+        customer.roles.append(customer_role)
+
+        db.session.add(admin_role)
+        db.session.add(seller_role)
+        db.session.add(staff_role)
+        db.session.add(customer_role)
+        db.session.add(admin)
+        db.session.add(seller)
+        db.session.add(staff)
+        db.session.add(customer)
+
+        db.session.add(Address(address="1377 Ridge Road", zip_code=67065, city="Isabel", state="Kansas", user_id=3))
+        db.session.add(Address(address="2337 Millbrook Road", zip_code=60607, city="Chicago", state="Illinois", user_id=1))
+        db.session.add(Address(address="4530 Freedom Lane", zip_code=95202, city="Stockton", state="California", user_id=2))
+        db.session.add(Address(address="1053 Evergreen Lane", zip_code=92614, city="Irvine", state="California", user_id=4))
+
+        db.session.add(CreditCard(cardnumber=4485940457238817, cvv=246, expiry=datetime.datetime.strptime("2023-02-28", "%Y-%m-%d"), user_id=1))
+        db.session.add(CreditCard(cardnumber=2720998970010088, cvv=730, expiry=datetime.datetime.strptime("2022-07-31", "%Y-%m-%d"), user_id=1))
+        db.session.add(CreditCard(cardnumber=344940981257746, cvv=361, expiry=datetime.datetime.strptime("2024-01-31", "%Y-%m-%d"), user_id=2))
+        db.session.add(CreditCard(cardnumber=36504513792803, cvv=375, expiry=datetime.datetime.strptime("2020-09-30", "%Y-%m-%d"), user_id=3))
+        db.session.add(CreditCard(cardnumber=5574741539556674, cvv=816, expiry=datetime.datetime.strptime("2024-05-31", "%Y-%m-%d"), user_id=4))
+        db.session.add(CreditCard(cardnumber=234234, cvv=345, expiry=datetime.datetime.strptime("2020-07-21", "%Y-%m-%d"), user_id=1))
+
+        db.session.add(Product(product_name="Carmen Shopper", description="1 Adjustable & Detachable Crossbody Strap, 2 Handles", image="images/ZB7938001_main.jpg", price=218, quantity=120, deleted=False))
+        db.session.add(Product(product_name="Rachel Tote", description="2 Handles", image="images/ZB7507200_main.jpg", price=198, quantity=250, deleted=False))
+        db.session.add(Product(product_name="Fiona Crossbody", description="1 Adjustable & Detachable Crossbody Strap", image="images/ZB7669200_main.jpg", price=148, quantity=150, deleted=False))
+        db.session.add(Product(product_name="Maya Hobo", description="1 Adjustable & Detachable Crossbody Strap, 1 Short Shoulder Strap", image="images/ZB6979200_main.jpg", price=238, quantity=200, deleted=False))
+
+        db.session.add(Review(user_id=1, product_id=1, rating=5, contents="I love this product!"))
+
+        db.session.add(Orders(user_id=1))
+        db.session.add(Orders(user_id=3))
+        db.session.add(Orders(user_id=3))
+        db.session.add(Orders(user_id=2))
+
+        db.session.add(Orderproduct(order_id=1, product_id=1, quantity=2))
+        db.session.add(Orderproduct(order_id=1, product_id=3, quantity=1))
+        db.session.add(Orderproduct(order_id=2, product_id=1, quantity=4))
+        db.session.add(Orderproduct(order_id=2, product_id=3, quantity=2))
+        db.session.add(Orderproduct(order_id=3, product_id=2, quantity=1))
+        db.session.add(Orderproduct(order_id=4, product_id=1, quantity=1))
+        db.session.add(Orderproduct(order_id=4, product_id=4, quantity=1))
         db.session.commit()
+
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
+
+
+def restricted(access_level):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            current_user_roles = [i.name for i in current_user.roles]
+            if access_level == "admin page" and not any(i in current_user_roles for i in ["Admin", "Seller", "Staff"]):
+                abort(404)
+            elif access_level == "admin" and "Admin" not in current_user_roles:
+                abort(404)
+            elif access_level == "seller" and "Seller" not in current_user_roles:
+                abort(404)
+            elif access_level == "staff" and "Staff" not in current_user_roles:
+                abort(404)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -62,57 +159,44 @@ def index():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+
     form = forms.LoginForm(request.form)
     if db.session.query(User).count() != 0:
         if request.method == "POST" and form.validate():
-            user = db.session.execute("SELECT * FROM user WHERE username = '%s' and password = '%s'" % (form.username.data, form.password.data))
-            id = [row[0] for row in user]
-            if len(id) > 0:
-                user = User.query.filter_by(id=id[0]).first()
-                if user.status == False:
-                    user.status = True
-                    db.session.commit()
-                login_user(user, remember=form.remember.data)
-                return redirect(url_for("index"))
-            else:
-                flash("Username/Password is incorrect, please try again", category="danger")
-                return redirect(url_for("login"))
-            """
-            user = User.query.filter_by(username=form.username.data).first()
+            user = User.query.filter_by(username=form.username.data).first_or_404()
             if user:
                 if check_password_hash(user.password, form.password.data):
                     if user.status == False:
                         user.status = True
                         db.session.commit()
                     login_user(user, remember=form.remember.data)
-                    return redirect(url_for("profile"))
-            flash("Username/Password is incorrect, please try again", category="danger")
-            return redirect(url_for("login"))
-            """
+
+                next_url = request.args.get("next")
+                if next_url is not None and is_safe_url(next_url):
+                    return redirect(next_url)
+
+                return redirect(url_for("index"))
+            else:
+                flash("Username/Password is incorrect, please try again", category="danger")
+                return redirect(url_for("login"))
     else:
         return redirect(url_for("signup"))
-    return render_template("login.html", form=form)
+    return render_template("login.html", form=form, next=request.args.get("next"))
 
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+
     form = forms.RegisterForm(request.form)
     if request.method == "POST" and form.validate():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
             hashedPassword = generate_password_hash(form.password.data, method="sha256")
-            newUser = User(username=form.username.data, email=form.email.data, password=form.password.data)
-            customer = Role.query.filter_by(name="Customer").first()
-            customer.users.append(newUser)
-            if User.query.filter_by(id="1").first().id == 1 and len(User.query.filter_by(id="1").first().roles) == 1:
-                staff = Role.query.filter_by(name="Staff").first()
-                staff.users.append(User.query.filter_by(id="1").first())
-                seller = Role.query.filter_by(name="Seller").first()
-                seller.users.append(User.query.filter_by(id="1").first())
-                admin = Role.query.filter_by(name="Admin").first()
-                admin.users.append(User.query.filter_by(id="1").first())
-            elif User.query.filter_by(id="2").first().id == 2 and len(User.query.filter_by(id="2").first().roles) == 1:
-                seller = Role.query.filter_by(name="Seller").first()
-                seller.users.append(User.query.filter_by(id="2").first())
+            newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
+            newUser.roles.append(Role.query.filter_by(name="Customer").first())
             db.session.add(newUser)
             db.session.commit()
             return redirect(url_for("login"))
@@ -133,22 +217,19 @@ def logout():
 def profile():
     form = forms.UpdateForm(request.form)
     if request.method == "POST" and form.validate():
-        # if check_password_hash(current_user.password, form.currentpassword.data):
-        if current_user.password == form.currentpassword.data:
-            user = User.query.filter_by(id=current_user.id).first()
+        if check_password_hash(current_user.password, form.currentpassword.data):
+            user = User.query.filter_by(id=current_user.id).first_or_404()
             if form.email.data != "":
                 user.email = form.email.data
             if form.username.data != "":
                 user.username = form.username.data
             if form.newpassword.data != "":
-                user.password = form.newpassword.data
-                """
                 hashedPassword = generate_password_hash(form.newpassword.data, method="sha256")
                 user.password = hashedPassword
-                """
             db.session.commit()
             return redirect(url_for("profile"))
     return render_template("profile.html", current_user=current_user, form=form)
+
 
 @app.route("/orders")
 @login_required
@@ -165,7 +246,7 @@ def cards():
 @app.route("/cards/add", methods=["GET", "POST"])
 @login_required
 def addcards():
-    user = User.query.filter_by(id=current_user.id).first()
+    user = User.query.filter_by(id=current_user.id).first_or_404()
     if request.method == "POST":
         print("test")
         obj = request.json
@@ -180,16 +261,17 @@ def addcards():
         date = datetime.datetime(int(year), int(month), int(day))
         user.creditcards.append(CreditCard(cardnumber=int(cardnum), cvv=int(cvv), expiry=date))
         db.session.commit()
-        card = CreditCard.query.filter_by(cardnumber=int(cardnum)).first()
+        card = CreditCard.query.filter_by(cardnumber=int(cardnum)).first_or_404()
         return redirect(url_for("cards"))
 
     return render_template("addcards.html", current_user=current_user)
 
+
 @app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
 @login_required
 def removecard(card_id):
-    user = User.query.filter_by(id=current_user.id).first()
-    removed = CreditCard.query.filter_by(id=card_id).first()
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+    removed = CreditCard.query.filter_by(id=card_id).first_or_404()
     user.creditcards.remove(removed)
     db.session.commit()
     return redirect(url_for("cards"))
@@ -199,7 +281,7 @@ def removecard(card_id):
 @login_required
 def updatecard(card_id):
     form = forms.CreditForm(request.form)
-    card = CreditCard.query.filter_by(id=card_id).first()
+    card = CreditCard.query.filter_by(id=card_id).first_or_404()
     if request.method == "POST" and form.validate():
         card.cardnumber = form.cardnumber.data
         card.cvv = form.cvv.data
@@ -222,7 +304,7 @@ def addresses():
 @app.route("/addresses/add", methods=["GET", "POST"])
 @login_required
 def addaddresses():
-    user = User.query.filter_by(id=current_user.id).first()
+    user = User.query.filter_by(id=current_user.id).first_or_404()
     if request.method == "POST":
         obj = request.json
         address = obj["address"]
@@ -238,8 +320,8 @@ def addaddresses():
 @app.route("/addresses/remove/<int:addresse_id>")
 @login_required
 def removeaddresses(addresse_id):
-    user = User.query.filter_by(id=current_user.id).first()
-    removed = Address.query.filter_by(id=addresse_id).first()
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+    removed = Address.query.filter_by(id=addresse_id).first_or_404()
     user.addresses.remove(removed)
     db.session.commit()
     return redirect(url_for("addresses"))
@@ -249,7 +331,7 @@ def removeaddresses(addresse_id):
 @login_required
 def updateaddress(address_id):
     form = forms.AddressForm(request.form)
-    address = Address.query.filter_by(id=address_id).first()
+    address = Address.query.filter_by(id=address_id).first_or_404()
     if request.method == "POST" and form.validate():
         address.address = form.address.data
         address.state = form.state.data
@@ -263,7 +345,7 @@ def updateaddress(address_id):
 @app.route("/profile/delete")
 @login_required
 def deleteprofile():
-    deletedUser = User.query.filter_by(id=current_user.id).first()
+    deletedUser = User.query.filter_by(id=current_user.id).first_or_404()
     logout_user()
     deletedUser.status = False
     db.session.commit()
@@ -272,22 +354,28 @@ def deleteprofile():
 
 @app.route("/admin")
 @login_required
+@restricted(access_level="admin page")
 def admin():
-    return render_template("admin.html", current_user=current_user, users=User.query.order_by(User.id).all(), products=Product.query.order_by(Product.productid).all())
+    context = {
+        "current_user": current_user,
+        "users": User.query.order_by(User.id).all(),
+        "products": Product.query.order_by(Product.productid).all(),
+        "current_user_roles": [i.name for i in current_user.roles]
+    }
+    return render_template("admin.html", **context)
 
 
 @app.route("/admin/create/user", methods=["GET", "POST"])
 @login_required
+@restricted(access_level="admin")
 def staffsignup():
     form = forms.AdminCreateForm(request.form)
     if request.method == "POST" and form.validate():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
-            # hashedPassword = generate_password_hash(form.password.data, method="sha256")
-            newUser = User(username=form.username.data, email=form.email.data, password=form.password.data)
-            customer = Role.query.filter_by(name="Customer").first()
-            customer.users.append(newUser)
-            staff = Role.query.filter_by(name="Staff").first()
-            staff.users.append(newUser)
+            hashedPassword = generate_password_hash(form.password.data, method="sha256")
+            newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
+            newUser.roles.append(Role.query.filter_by(name="Customer").first())
+            newUser.roles.append(Role.query.filter_by(name="Staff").first())
             db.session.add(newUser)
             db.session.commit()
             return redirect(url_for("admin"))
@@ -298,8 +386,9 @@ def staffsignup():
 
 @app.route("/admin/delete/<int:user_id>")
 @login_required
+@restricted(access_level="admin")
 def adminDelete(user_id):
-    deletedUser = User.query.filter_by(id=user_id).first()
+    deletedUser = User.query.filter_by(id=user_id).first_or_404()
     deletedUser.status = False
     db.session.commit()
     return redirect(url_for("admin"))
@@ -346,18 +435,20 @@ def product(product_id):
     return render_template("product.html", product=product, form=form, reviews=reviews, user_review=user_review, user_bought=user_bought, productQuantity=productQuantity)
 
 
-@app.route("/add_review/<int:user_id>/<int:product_id>", methods=["POST"])
-@login_required
-def add_review(user_id, product_id):
+@app.route("/add_review/<int:product_id>", methods=["POST"])
+def add_review(product_id):
+    if not current_user.is_authenticated:
+        abort(400)
+
     form = forms.ReviewForm(request.form)
     if form.validate():
-        user = User.query.filter_by(id=user_id).first()
+        user = User.query.filter_by(id=current_user.id).first()
         product = Product.query.filter_by(productid=product_id).first()
         if None in [user, product]:
             print("No such user and/or product.")
             return redirect(url_for("product", product_id=product_id))
 
-        review = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+        review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
         if review is not None:
             print("User already submitted a review for this product.")
             return redirect(url_for("product", product_id=product_id))
@@ -392,12 +483,14 @@ def add_review(user_id, product_id):
     return redirect(url_for('product', product_id=product_id))
 
 
-@app.route("/edit_review/<int:user_id>/<int:product_id>", methods=["POST"])
-@login_required
-def edit_review(user_id, product_id):
+@app.route("/edit_review/<int:product_id>", methods=["POST"])
+def edit_review(product_id):
+    if not current_user.is_authenticated:
+        abort(400)
+
     form = forms.ReviewForm(request.form)
     if form.validate():
-        review = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+        review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
         if review is None:
             print("No such user and/or product, or user haven't submitted a review for this product.")
             return redirect(url_for("product", product_id=product_id))
@@ -412,10 +505,12 @@ def edit_review(user_id, product_id):
     return redirect(url_for('product', product_id=product_id))
 
 
-@app.route("/delete_review/<int:user_id>/<int:product_id>", methods=["POST"])
-@login_required
-def delete_review(user_id, product_id):
-    review = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+@app.route("/delete_review/<int:product_id>", methods=["POST"])
+def delete_review(product_id):
+    if not current_user.is_authenticated:
+        abort(400)
+
+    review = Review.query.filter_by(user_id=current_user.id, product_id=product_id).first()
     if review is None:
         print("No such user and/or product, or user haven't submitted a review for this product.")
         return redirect(url_for("product", product_id=product_id))
@@ -509,6 +604,7 @@ def cart():
 
     return render_template("cart.html", len=len, cart=productlist, form=cart_Form)
 
+
 @app.route("/checkout", methods=["GET", "POST"])
 @login_required
 def checkout():
@@ -570,11 +666,15 @@ def checkout():
         return redirect(url_for("index"))
     return render_template("checkout.html", form=checkoutForm, cart=productlist, len=len,productquantity=productquantity)
 
+
 @app.route('/products', methods=['GET'])
 def getProducts():
     return redirect('admin')
 
+
 @app.route('/products/new', methods=['GET', 'POST'])
+@login_required
+@restricted(access_level="seller")
 def addProduct():
     form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
     if request.method == "POST" and form.validate():
@@ -591,7 +691,10 @@ def addProduct():
         return redirect(url_for("product", product_id=product.productid))
     return render_template('addProduct.html', form=form)
 
+
 @app.route('/products/<int:product_id>/update', methods=['GET', 'POST'])
+@login_required
+@restricted(access_level="seller")
 def update_product(product_id):
     products = Product.query.get(product_id)
     form = forms.addProductForm(CombinedMultiDict((request.files, request.form)))
@@ -614,6 +717,8 @@ def update_product(product_id):
 
 
 @app.route('/products/<int:product_id>/delete', methods=["GET", "POST"])
+@login_required
+@restricted(access_level="seller")
 def delete_product(product_id):
     products = Product.query.filter_by(productid=product_id).first()
     products.deleted = True
@@ -629,11 +734,18 @@ def search():
         search_results = []
     else:
         query = query.strip().lower()
-        searchtest = db.session.execute("SELECT * FROM products WHERE lower(product_name) LIKE '%{}%'".format(query))
-        search_results = [i for i in searchtest]
-        # search_results = [i for i in Product.query.all() if query in i.product_name.lower()]
+        search_results = [i for i in Product.query.all() if query in i.product_name.lower()]
 
     return render_template("search.html", query=query, search_results=search_results)
+
+
+@app.after_request
+def add_header(response):
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 
 
 if __name__ == "__main__":
