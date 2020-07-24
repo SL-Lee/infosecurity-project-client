@@ -3,8 +3,6 @@
 {% block content %}
 {% from "includes/_form_helper.html" import render_field %}
 {% from "includes/_display_stars.html" import display_stars %}
-<!-- https://www.fossil.com/en-us/products/carmen-shopper/ZB7938001.html -->
-<!-- DOM XSS Attack example: http://localhost:5000/product/1?sort-by=%3Ciframe%20onload=%22alert(%27XSS%27)%22%3E%3C/iframe%3E -->
 <style>
   #product-img-container > img {
     max-height: 400px;
@@ -20,8 +18,9 @@
   #product-reviews .card {
     margin: 20px 0;
   }
+
   p.no-label>label{
-  display: none;
+    display: none;
   }
 </style>
 <h1>{{ product.product_name }}</h1>
@@ -35,6 +34,7 @@
     <h3><b>${{ product.price }}</b></h3>
 
     <form method="POST">
+      {{ form.csrf_token }}
       <div class="form-group">
         <p>Quantity:</p>
         <p class="no-label">{{ render_field(productQuantity.productQuantity, class="form-control") }}</p>
@@ -50,7 +50,8 @@
   <div class="card">
     <div class="card-body">
       {% if user_bought %}
-      <form method="POST" action="{% if user_review is none %}{{ url_for('add_review', user_id=current_user.id, product_id=product.productid) }}{% else %}{{ url_for('edit_review', user_id=current_user.id, product_id=product.productid) }}{% endif %}">
+      <form method="POST" action="{% if user_review is none %}{{ url_for('add_review', product_id=product.productid) }}{% else %}{{ url_for('edit_review', product_id=product.productid) }}{% endif %}">
+        {{ form.csrf_token }}
         <div class="form-group">
           {{ render_field(form.review_rating) }}
         </div>
@@ -82,7 +83,7 @@
         {% for review in reviews %}
         <li class="list-group-item">
           <p><b>{{ review.user.username }}</b> - {{ display_stars(review.rating) }}</p>
-          <pre class="mb-0" style="font-family: inherit; font-size: inherit;">{{ review.contents|safe }}</pre>
+          <pre class="mb-0" style="font-family: inherit; font-size: inherit;">{{ review.contents }}</pre>
         </li>
         {% endfor %}
       {% else %}
@@ -96,7 +97,12 @@
   var deleteReviewButton = document.getElementById("delete-review-button");
   deleteReviewButton.addEventListener("click", e => {
     e.preventDefault();
-    fetch("{{ url_for('delete_review', user_id=current_user.id, product_id=product.productid) }}", {"method": "POST"})
+    fetch("{{ url_for('delete_review', product_id=product.productid) }}", {
+      "method": "POST",
+      "headers": {
+        "X-CSRFToken": "{{ csrf_token() }}"
+      }
+    })
     .then(response => {
       return response.text();
     })
@@ -111,7 +117,7 @@
 <script>
   window.addEventListener("load", e => {
     var sortBy = (new URL(location.href)).searchParams.get("sort-by");
-    document.getElementById("sort-by-placeholder").innerHTML = sortBy ? sortBy : "highest-rating";
+    document.getElementById("sort-by-placeholder").innerText = sortBy ? sortBy : "highest-rating";
     if (!sortBy) {
       history.replaceState(null, null, "?sort-by=highest-rating");
     } else if (sortBy == "lowest-rating") {

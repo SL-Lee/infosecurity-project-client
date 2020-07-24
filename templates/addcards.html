@@ -40,9 +40,14 @@
                         e.preventDefault();
                         var myObj = { cardnum: document.forms["creditForm"]["cardnum"].value, cvv: document.forms["creditForm"]["cvv"].value, exp_date: document.forms["creditForm"]["exp_date"].value};
                         var myJSON = JSON.stringify(myObj);
-                        fetch("{{ url_for('addcards') }}", {"method": "POST", "headers": {
-                            'Content-Type': 'application/json'
-                        }, "body": myJSON})
+                        fetch("{{ url_for('addcards') }}", {
+                            "method": "POST",
+                            "headers": {
+                                'Content-Type': 'application/json',
+                                "X-CSRFToken": "{{ csrf_token() }}"
+                            },
+                            "body": myJSON
+                        })
                         .then(response => {
                             return response.text();
                         })
