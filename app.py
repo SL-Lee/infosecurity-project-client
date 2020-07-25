@@ -1,4 +1,4 @@
-import datetime
+import datetime , random, string
 from flask import (
     abort,
     flash,
@@ -52,6 +52,7 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 login_manager.login_message_category = "danger"
 
+
 db.init_app(app)
 csrf.init_app(app)
 with app.app_context():
@@ -62,10 +63,30 @@ with app.app_context():
         staff_role = Role(name="Staff", description="This is the staff account, it manages the reviews of the products")
         customer_role = Role(name="Customer", description="This is a customer account")
 
-        admin = User(username="admin", email="admin@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
-        seller = User(username="seller", email="seller@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
-        staff = User(username="staff", email="staff@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
-        customer = User(username="customer", email="customer@example.com", password=generate_password_hash("password", method="sha256"), date_created=datetime.datetime.now(), status=True)
+        def generate_saltpasswordhash(password):
+            letters_and_digits = string.ascii_letters + string.digits
+            salt = ''.join((random.choice(letters_and_digits) for i in range(6)))
+            saltPassword = password + salt
+            hashedPassword = generate_password_hash(saltPassword, method="sha256")
+            saltedHashPassword = hashedPassword + salt
+
+            return saltedHashPassword
+
+        def generate_creditcard(cardnumber, expiry, user_id):
+            user = User.query.filter_by(id=user_id).first_or_404()
+            key = MyAes.get_fixed_key()
+            cardnumber = str(cardnumber)
+            cardnumber, iv = MyAes.encrypt(key, cardnumber.encode("utf8"))
+            year = expiry[0:4]
+            month = expiry[5:7]
+            day = expiry[8:]
+            date = datetime.datetime(int(year), int(month), int(day))
+            user.creditcards.append(CreditCard(cardnumber=cardnumber, expiry=date, iv=iv))
+
+        admin = User(username="admin", email="admin@example.com", password=generate_saltpasswordhash("password"), date_created=datetime.datetime.now(), status=True)
+        seller = User(username="seller", email="seller@example.com", password=generate_saltpasswordhash("password"), date_created=datetime.datetime.now(), status=True)
+        staff = User(username="staff", email="staff@example.com", password=generate_saltpasswordhash("password"), date_created=datetime.datetime.now(), status=True)
+        customer = User(username="customer", email="customer@example.com", password=generate_saltpasswordhash("password"), date_created=datetime.datetime.now(), status=True)
 
         admin.roles.append(customer_role)
         admin.roles.append(seller_role)
@@ -94,12 +115,14 @@ with app.app_context():
         db.session.add(Address(address="4530 Freedom Lane", zip_code=95202, city="Stockton", state="California", user_id=2))
         db.session.add(Address(address="1053 Evergreen Lane", zip_code=92614, city="Irvine", state="California", user_id=4))
 
-        #db.session.add(CreditCard(cardnumber=4485940457238817, cvv=246, expiry=datetime.datetime.strptime("2023-02-28", "%Y-%m-%d"), user_id=1))
-        #db.session.add(CreditCard(cardnumber=2720998970010088, cvv=730, expiry=datetime.datetime.strptime("2022-07-31", "%Y-%m-%d"), user_id=1))
-        #db.session.add(CreditCard(cardnumber=344940981257746, cvv=361, expiry=datetime.datetime.strptime("2024-01-31", "%Y-%m-%d"), user_id=2))
-        #db.session.add(CreditCard(cardnumber=36504513792803, cvv=375, expiry=datetime.datetime.strptime("2020-09-30", "%Y-%m-%d"), user_id=3))
-        #db.session.add(CreditCard(cardnumber=5574741539556674, cvv=816, expiry=datetime.datetime.strptime("2024-05-31", "%Y-%m-%d"), user_id=4))
-        #db.session.add(CreditCard(cardnumber=234234, cvv=345, expiry=datetime.datetime.strptime("2020-07-21", "%Y-%m-%d"), user_id=1))
+
+        generate_creditcard(4485940457238817, "2023-02-28", 1)
+        generate_creditcard(7072719230673648, "2022-07-31", 1)
+        generate_creditcard(4744367722519153, "2024-01-31", 2)
+        generate_creditcard(7105735512242654, "2020-09-30", 3)
+        generate_creditcard(6018736652340095, "2024-05-31", 4)
+        generate_creditcard(2872570074384908, "2020-07-21", 1)
+
 
         db.session.add(Product(product_name="Carmen Shopper", description="1 Adjustable & Detachable Crossbody Strap, 2 Handles", image="images/ZB7938001_main.jpg", price=218, quantity=120, deleted=False))
         db.session.add(Product(product_name="Rachel Tote", description="2 Handles", image="images/ZB7507200_main.jpg", price=198, quantity=250, deleted=False))
@@ -168,7 +191,10 @@ def login():
         if request.method == "POST" and form.validate():
             user = User.query.filter_by(username=form.username.data).first_or_404()
             if user:
-                if check_password_hash(user.password, form.password.data):
+                print(user.username)
+                salt = user.password[-6:]
+                saltPassword = form.password.data + salt
+                if check_password_hash(user.password[:-6], saltPassword):
                     if user.status == False:
                         user.status = True
                         db.session.commit()
@@ -195,8 +221,14 @@ def signup():
     form = forms.RegisterForm(request.form)
     if request.method == "POST" and form.validate():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
-            hashedPassword = generate_password_hash(form.password.data, method="sha256")
-            newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
+
+            letters_and_digits = string.ascii_letters + string.digits
+            salt = ''.join((random.choice(letters_and_digits) for i in range(6)))
+            saltPassword = form.password.data + salt
+            hashedPassword = generate_password_hash(saltPassword, method="sha256")
+            saltedHashPassword = hashedPassword + salt
+            newUser = User(username=form.username.data, email=form.email.data, password=saltedHashPassword)
+
             newUser.roles.append(Role.query.filter_by(name="Customer").first())
             db.session.add(newUser)
             db.session.commit()
@@ -618,7 +650,7 @@ def cart():
     while len(cart_Form.productQuantity) != len(cart[0]):
         for i in cart[0]:
             cart_Form.productQuantity.append_entry(cart[0][i])
-    if request.method == "POST":
+    if request.method == "POST" and cart_Form.validate():
 
         quantity = cart_Form.productQuantity.data
         x = 0
@@ -684,6 +716,8 @@ def checkout():
             if products[i] > product.quantity:
                 flash("There is not enough stock", "warning")
                 return redirect(url_for("cart"))
+        for i in products:
+            product = Product.query.filter_by(productid=i).first()
             order_product = Orderproduct(quantity=products[i])
             order_product.product = product
             order.order_product.append(order_product)
@@ -696,7 +730,7 @@ def checkout():
         db.session.add(order_product)
         db.session.commit()
 
-        print("Order successfully added")
+        flash("Order successfully added", "success")
         return redirect(url_for("index"))
     return render_template("checkout.html", form=checkoutForm, cart=productlist, len=len,productquantity=productquantity)
 

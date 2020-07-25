@@ -20,12 +20,12 @@
                 <form name="creditForm" onsubmit="return false" method="POST">
                     <div class="form-group">
                         <label for="cardnum">Card Number:</label>
-                        <input class="form-control" type="number" id="cardnum" name="cardnum">
+                        <input class="form-control" type="number" id="cardnum" name="cardnum" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group col-sm-6">
                             <label for="exp_date">Expiry Date:</label>
-                            <input class="form-control" type="date" id="exp_date" name="exp_date">
+                            <input class="form-control" type="date" id="exp_date" name="exp_date" required>
                         </div>
                     </div>
                     <button id="submit-button" type="submit" value="Submit" class="btn btn-primary">Add</button>
