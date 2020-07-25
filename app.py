@@ -1,4 +1,4 @@
-import datetime , random, string
+import datetime, string, secrets
 from flask import (
     abort,
     flash,
@@ -65,7 +65,7 @@ with app.app_context():
 
         def generate_saltpasswordhash(password):
             letters_and_digits = string.ascii_letters + string.digits
-            salt = ''.join((random.choice(letters_and_digits) for i in range(6)))
+            salt = ''.join((secrets.choice(letters_and_digits) for i in range(6)))
             saltPassword = password + salt
             hashedPassword = generate_password_hash(saltPassword, method="sha256")
             saltedHashPassword = hashedPassword + salt
@@ -223,7 +223,7 @@ def signup():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
 
             letters_and_digits = string.ascii_letters + string.digits
-            salt = ''.join((random.choice(letters_and_digits) for i in range(6)))
+            salt = ''.join((secrets.choice(letters_and_digits) for i in range(6)))
             saltPassword = form.password.data + salt
             hashedPassword = generate_password_hash(saltPassword, method="sha256")
             saltedHashPassword = hashedPassword + salt

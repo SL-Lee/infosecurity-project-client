@@ -16,7 +16,7 @@ def get_random_key():
 
 # AES encrypt using CBC and IV, with default padding (PKCS7)
 def encrypt(key, plaintext_utf8):
-    cipher = AES.new(key, AES.MODE_CBC)     # Q6
+    cipher = AES.new(key, AES.MODE_OFB)     # Q6
     ciphertext = cipher.encrypt(pad(plaintext_utf8, AES.block_size))
 
     return ciphertext, cipher.iv
@@ -25,7 +25,7 @@ def encrypt(key, plaintext_utf8):
 # AES decrypt using CBC and IV, with default unpadding (PKCS7)
 def decrypt(key,ciphertext, iv):
 
-    cipher = AES.new(key, AES.MODE_CBC, iv)     # Q6
+    cipher = AES.new(key, AES.MODE_OFB, iv)     # Q6
     decryptedtext_utf = unpad(cipher.decrypt(ciphertext), AES.block_size)
 
     return decryptedtext_utf
