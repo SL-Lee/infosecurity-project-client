@@ -221,7 +221,6 @@ def signup():
     form = forms.RegisterForm(request.form)
     if request.method == "POST" and form.validate():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
-
             letters_and_digits = string.ascii_letters + string.digits
             salt = ''.join((secrets.choice(letters_and_digits) for i in range(6)))
             saltPassword = form.password.data + salt
@@ -250,15 +249,22 @@ def logout():
 def profile():
     form = forms.UpdateForm(request.form)
     if request.method == "POST" and form.validate():
-        if check_password_hash(current_user.password, form.currentpassword.data):
+        salt = current_user.password[-6:]
+        saltPassword = form.currentpassword.data + salt
+        if check_password_hash(current_user.password[:-6], saltPassword):
             user = User.query.filter_by(id=current_user.id).first_or_404()
             if form.email.data != "":
                 user.email = form.email.data
             if form.username.data != "":
                 user.username = form.username.data
             if form.newpassword.data != "":
-                hashedPassword = generate_password_hash(form.newpassword.data, method="sha256")
-                user.password = hashedPassword
+                letters_and_digits = string.ascii_letters + string.digits
+                salt = ''.join((secrets.choice(letters_and_digits) for i in range(6)))
+                saltPassword = form.newpassword.data + salt
+                hashedPassword = generate_password_hash(saltPassword, method="sha256")
+                saltedHashPassword = hashedPassword + salt
+
+                user.password = saltedHashPassword
             db.session.commit()
             return redirect(url_for("profile"))
     return render_template("profile.html", current_user=current_user, form=form)
@@ -431,8 +437,14 @@ def staffsignup():
     form = forms.AdminCreateForm(request.form)
     if request.method == "POST" and form.validate():
         if User.query.filter_by(username=form.username.data).scalar() is None and User.query.filter_by(email=form.email.data).scalar() is None:
-            hashedPassword = generate_password_hash(form.password.data, method="sha256")
-            newUser = User(username=form.username.data, email=form.email.data, password=hashedPassword)
+            letters_and_digits = string.ascii_letters + string.digits
+            salt = ''.join((secrets.choice(letters_and_digits) for i in range(6)))
+            saltPassword = form.password.data + salt
+            hashedPassword = generate_password_hash(saltPassword, method="sha256")
+            saltedHashPassword = hashedPassword + salt
+
+            newUser = User(username=form.username.data, email=form.email.data, password=saltedHashPassword)
+
             newUser.roles.append(Role.query.filter_by(name="Customer").first())
             newUser.roles.append(Role.query.filter_by(name="Staff").first())
             db.session.add(newUser)
