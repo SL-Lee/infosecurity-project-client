@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 {% block title %} Profile - XYZ Store {% endblock %}
-
 {% block content %}
-{% from "includes/_form_helper.html" import render_field %}
+
     <div class="container-fluid content">
         <div class="row justify-content-center">
             <div class="col-sm-12">
@@ -15,22 +14,54 @@
                 <p><img src="{{ url_for('static', filename='images/person-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('profile') }}">Profile</a></p>
                 <p><img src="{{ url_for('static', filename='images/credit-card.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('cards') }}">Credit Card</a><img src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}" alt="" width="24" height="24" title="Bootstrap"></p>
                 <p><img src="{{ url_for('static', filename='images/house-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('addresses') }}">Address</a></p>
+                <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('orders') }}">Orders</a></p>
             </div>
+            {% macro get_card_id(card) %}
+            {{ card.id }}
+            {% endmacro %}
             <div class="col-sm-9">
-                <h3>Credit Number - {{ card.cardnumber }}</h3>
-                <form class="form" method="POST">
-                    {{ form.csrf_token }}
+                <h3>Credit Number - {{ creditcardnum }}</h3>
+                <form name="creditForm" onsubmit="return false" method="POST">
                     <div class="form-group">
-                        {{ render_field(form.cardnumber, class="form-control") }}
+                        <label for="cardnum">Card Number:</label>
+                        <input class="form-control" type="number" id="cardnum" name="cardnum">
                     </div>
-                    <div class="form-group">
-                        {{ render_field(form.cvv, class="form-control") }}
+                    <div class="form-row">
+                        <div class="form-group col-sm-6">
+                            <label for="exp_date">Expiry Date:</label>
+                            <input class="form-control" type="date" id="exp_date" name="exp_date">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        {{ render_field(form.expiry, class="form-control") }}
-                    </div>
-                    <button type="submit" class="btn btn-primary">Update</button>
+                    <button id="submit-button" type="submit" value="Submit" class="btn btn-primary">Add</button>
                 </form>
+                <script>
+                    var submitButton = document.getElementById("submit-button");
+
+                    submitButton.addEventListener("click", e => {
+                        e.preventDefault();
+                        var myObj = { cardnum: document.forms["creditForm"]["cardnum"].value, exp_date: document.forms["creditForm"]["exp_date"].value};
+                        var myJSON = JSON.stringify(myObj);
+                        fetch("{{ url_for('updatecard',card_id=get_card_id(card) ) }}", {
+                            "method": "POST",
+                            "headers": {
+                                'Content-Type': 'application/json',
+                                "X-CSRFToken": "{{ csrf_token() }}"
+                            },
+                            "body": myJSON
+                        })
+                        .then(response => {
+                            return response.text();
+                        })
+                        .then(text => {
+                            document.open();
+                            document.write(text);
+                            document.close();
+                        })
+                        .catch(error => {
+                            console.log("Error:", error);
+                        });
+                    });
+                </script>
             </div>
         </div>
     </div>
