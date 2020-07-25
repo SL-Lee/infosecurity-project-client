@@ -35,7 +35,10 @@
         </li>
         {% endif %}
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+          <form method="POST" action="{{ url_for('logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <a class="nav-link" href="#" onclick="this.parentElement.requestSubmit()">Logout</a>
+          </form>
         </li>
         {% else %}
         <li class="nav-item">
