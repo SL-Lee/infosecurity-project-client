@@ -23,21 +23,19 @@
                     <thead>
                         <tr>
                         <th>Card Number</th>
-                        <th>CVV</th>
                         <th>Expiry</th>
                         <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for card in current_user.creditcards %}
+                        {% for i in range(len(creditcards)) %}
                             <tr>
-                                <td>{{ card.cardnumber }}</td>
-                                <td>{{ card.cvv }}</td>
-                                <td>{{ card.expiry }}</td>
+                                <td>{{ cardlist[i] }}</td>
+                                <td>{{ creditcards[i].expiry }}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <button class="btn btn-warning" onclick="location.href='/cards/update/{{ card.id }}'">Update</button>
-                                        <button class="btn btn-danger" onclick="location.href='/cards/remove/{{ card.id }}'">Remove</button>
+                                        <button class="btn btn-warning" onclick="location.href='/cards/update/{{ creditcards[i].id }}'">Update</button>
+                                        <button class="btn btn-danger" onclick="location.href='/cards/remove/{{ creditcards[i].id }}'">Remove</button>
                                     </div>
                                 </td>
                             </tr>

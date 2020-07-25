@@ -24,10 +24,6 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group col-sm-6">
-                            <label for="cvv">CVV:</label>
-                            <input class="form-control" type="number" id="cvv" name="cvv">
-                        </div>
-                        <div class="form-group col-sm-6">
                             <label for="exp_date">Expiry Date:</label>
                             <input class="form-control" type="date" id="exp_date" name="exp_date">
                         </div>
@@ -38,7 +34,7 @@
                     var submitButton = document.getElementById("submit-button");
                     submitButton.addEventListener("click", e => {
                         e.preventDefault();
-                        var myObj = { cardnum: document.forms["creditForm"]["cardnum"].value, cvv: document.forms["creditForm"]["cvv"].value, exp_date: document.forms["creditForm"]["exp_date"].value};
+                        var myObj = { cardnum: document.forms["creditForm"]["cardnum"].value, exp_date: document.forms["creditForm"]["exp_date"].value};
                         var myJSON = JSON.stringify(myObj);
                         fetch("{{ url_for('addcards') }}", {
                             "method": "POST",

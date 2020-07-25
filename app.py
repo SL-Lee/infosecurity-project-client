@@ -18,7 +18,7 @@ from flask_login import (
     LoginManager,
     logout_user
 )
-from classes import forms
+from classes import forms, MyAes
 from classes.forms import csrf
 from classes.models import (
     db,
@@ -31,6 +31,7 @@ from classes.models import (
     CreditCard,
     Address
 )
+import json
 from urllib.parse import urlparse, urljoin
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.datastructures import CombinedMultiDict
@@ -93,12 +94,12 @@ with app.app_context():
         db.session.add(Address(address="4530 Freedom Lane", zip_code=95202, city="Stockton", state="California", user_id=2))
         db.session.add(Address(address="1053 Evergreen Lane", zip_code=92614, city="Irvine", state="California", user_id=4))
 
-        db.session.add(CreditCard(cardnumber=4485940457238817, cvv=246, expiry=datetime.datetime.strptime("2023-02-28", "%Y-%m-%d"), user_id=1))
-        db.session.add(CreditCard(cardnumber=2720998970010088, cvv=730, expiry=datetime.datetime.strptime("2022-07-31", "%Y-%m-%d"), user_id=1))
-        db.session.add(CreditCard(cardnumber=344940981257746, cvv=361, expiry=datetime.datetime.strptime("2024-01-31", "%Y-%m-%d"), user_id=2))
-        db.session.add(CreditCard(cardnumber=36504513792803, cvv=375, expiry=datetime.datetime.strptime("2020-09-30", "%Y-%m-%d"), user_id=3))
-        db.session.add(CreditCard(cardnumber=5574741539556674, cvv=816, expiry=datetime.datetime.strptime("2024-05-31", "%Y-%m-%d"), user_id=4))
-        db.session.add(CreditCard(cardnumber=234234, cvv=345, expiry=datetime.datetime.strptime("2020-07-21", "%Y-%m-%d"), user_id=1))
+        #db.session.add(CreditCard(cardnumber=4485940457238817, cvv=246, expiry=datetime.datetime.strptime("2023-02-28", "%Y-%m-%d"), user_id=1))
+        #db.session.add(CreditCard(cardnumber=2720998970010088, cvv=730, expiry=datetime.datetime.strptime("2022-07-31", "%Y-%m-%d"), user_id=1))
+        #db.session.add(CreditCard(cardnumber=344940981257746, cvv=361, expiry=datetime.datetime.strptime("2024-01-31", "%Y-%m-%d"), user_id=2))
+        #db.session.add(CreditCard(cardnumber=36504513792803, cvv=375, expiry=datetime.datetime.strptime("2020-09-30", "%Y-%m-%d"), user_id=3))
+        #db.session.add(CreditCard(cardnumber=5574741539556674, cvv=816, expiry=datetime.datetime.strptime("2024-05-31", "%Y-%m-%d"), user_id=4))
+        #db.session.add(CreditCard(cardnumber=234234, cvv=345, expiry=datetime.datetime.strptime("2020-07-21", "%Y-%m-%d"), user_id=1))
 
         db.session.add(Product(product_name="Carmen Shopper", description="1 Adjustable & Detachable Crossbody Strap, 2 Handles", image="images/ZB7938001_main.jpg", price=218, quantity=120, deleted=False))
         db.session.add(Product(product_name="Rachel Tote", description="2 Handles", image="images/ZB7507200_main.jpg", price=198, quantity=250, deleted=False))
@@ -240,31 +241,44 @@ def orders():
 @app.route("/cards")
 @login_required
 def cards():
-    return render_template("cards.html", current_user=current_user)
+    user = User.query.filter_by(id=current_user.id).first()
+    creditcards = user.creditcards
+    key = MyAes.get_fixed_key()
+    cardlist = []
+    for i in range(len(creditcards)):
+        card = MyAes.decrypt(key, creditcards[i].cardnumber, creditcards[i].iv).decode("utf8")
+        cardlist.append(card)
+    print(cardlist)
+    return render_template("cards.html", current_user=current_user, cardlist=cardlist, len=len, creditcards=creditcards)
 
 
 @app.route("/cards/add", methods=["GET", "POST"])
 @login_required
 def addcards():
-    user = User.query.filter_by(id=current_user.id).first_or_404()
-    if request.method == "POST":
-        print("test")
-        obj = request.json
-        cardnum = obj["cardnum"]
+    try:
+        user = User.query.filter_by(id=current_user.id).first_or_404()
+        if request.method == "POST":
+            obj = request.json
+            cardnum = obj["cardnum"]
+            print(cardnum)
+            if cardnum.isalpha() or len(cardnum) == 0:
+                raise Exception("Integer only")
+            key = MyAes.get_fixed_key()
+            cardnumber, iv = MyAes.encrypt(key, cardnum.encode("utf8"))
+            exp_date = obj["exp_date"]
+            print(exp_date)
+            year = exp_date[0:4]
+            month = exp_date[5:7]
+            day = exp_date[8:]
+            date = datetime.datetime(int(year), int(month), int(day))
+            user.creditcards.append(CreditCard(cardnumber=cardnumber, expiry=date, iv=iv))
+            db.session.commit()
+            return redirect(url_for("cards"))
 
-        cvv = obj["cvv"]
-        exp_date = obj["exp_date"]
-        print(exp_date)
-        year = exp_date[0:4]
-        month = exp_date[5:7]
-        day = exp_date[8:]
-        date = datetime.datetime(int(year), int(month), int(day))
-        user.creditcards.append(CreditCard(cardnumber=int(cardnum), cvv=int(cvv), expiry=date))
-        db.session.commit()
-        card = CreditCard.query.filter_by(cardnumber=int(cardnum)).first_or_404()
-        return redirect(url_for("cards"))
-
-    return render_template("addcards.html", current_user=current_user)
+        return render_template("addcards.html", current_user=current_user)
+    except:
+        flash("An error has occurred", "danger")
+        return redirect(url_for("addcards"))
 
 
 @app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
@@ -280,20 +294,33 @@ def removecard(card_id):
 @app.route("/cards/update/<int:card_id>", methods=["GET", "POST"])
 @login_required
 def updatecard(card_id):
-    form = forms.CreditForm(request.form)
-    card = CreditCard.query.filter_by(id=card_id).first_or_404()
-    if request.method == "POST" and form.validate():
-        card.cardnumber = form.cardnumber.data
-        card.cvv = form.cvv.data
-        expiry = form.expiry.data
-        if expiry.month < 12:
-            card.expiry = datetime.date(expiry.year, expiry.month+1, expiry.day) - datetime.timedelta(days=1)
-        elif expiry.month == 12:
-            card.expiry = datetime.date(expiry.year+1, 1, expiry.day) - datetime.timedelta(days=1)
-        db.session.commit()
+    try:
+        form = forms.CreditForm(request.form)
+        key = MyAes.get_fixed_key()
+        card = CreditCard.query.filter_by(id=card_id).first_or_404()
+        creditcardnum = MyAes.decrypt(key, card.cardnumber, card.iv).decode("utf8")
+        if request.method == "POST":
+            obj = request.json
+            cardnum = obj["cardnum"]
+            if cardnum.isalpha() or len(cardnum) == 0:
+                raise Exception("Integer only")
+            key = MyAes.get_fixed_key()
+            cardnumber, iv = MyAes.encrypt(key, cardnum.encode("utf8"))
+            exp_date = obj["exp_date"]
+            print(exp_date)
+            year = exp_date[0:4]
+            month = exp_date[5:7]
+            day = exp_date[8:]
+            date = datetime.datetime(int(year), int(month), int(day))
+            card.cardnumber = cardnumber
+            card.iv = iv
+            card.expiry = date
+            db.session.commit()
+            return redirect(url_for("cards"))
+        return render_template("updatecard.html", current_user=current_user, form=form, card=card, creditcardnum=creditcardnum)
+    except:
+        flash("An error has occurred", "danger")
         return redirect(url_for("cards"))
-    return render_template("updatecard.html", current_user=current_user, form=form, card=card)
-
 
 @app.route("/addresses")
 @login_required
@@ -612,7 +639,11 @@ def checkout():
     user = User.query.filter_by(id=current_user.id).first()
     creditcards = user.creditcards
     addresses = user.addresses
-    cardlist=[(creditcards[i], "Card %d" %(creditcards[i].cardnumber)) for i in range(len(creditcards))]
+    key = MyAes.get_fixed_key()
+    cardlist = []
+    for i in range(len(creditcards)):
+        card = MyAes.decrypt(key, creditcards[i].cardnumber, creditcards[i].iv).decode("utf8")
+        cardlist.append("Card " + card)
     checkoutForm.creditcard.choices = cardlist
     addresslist=[(addresses, "%s" %(addresses[i].address)) for i in range(len(addresses))]
 
@@ -650,6 +681,9 @@ def checkout():
 
         for i in products:
             product = Product.query.filter_by(productid=i).first()
+            if products[i] > product.quantity:
+                flash("There is not enough stock", "warning")
+                return redirect(url_for("cart"))
             order_product = Orderproduct(quantity=products[i])
             order_product.product = product
             order.order_product.append(order_product)

@@ -31,10 +31,10 @@ class User(UserMixin, db.Model):
 
 class CreditCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    cardnumber = db.Column(db.Integer, nullable=False)
-    cvv = db.Column(db.Integer, nullable=False)
+    cardnumber = db.Column(db.String, nullable=False)
     expiry = db.Column(db.Date, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    iv = db.Column(db.String, nullable=False)
 
 
 class Address(db.Model):
