@@ -64,7 +64,7 @@
   </nav>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div class="container mt-3">
+      <div id="message-container" class="container mt-3">
         {% for category, message in messages %}
           <div class="alert alert-{{ category }} alert-dismissable fade show">
             {{ message }}
@@ -74,7 +74,7 @@
       </div>
     {% endif %}
   {% endwith %}
-  <div class="container" style="min-height:calc(100vh - 56px - 81px)">
+  <div id="content" class="container" style="min-height: calc(100vh - 56px - 81px)">
   {% block content %}
   {% endblock %}
   </div>
@@ -84,5 +84,10 @@
   <script src="{{ url_for('static', filename='js/jquery-3.5.1.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/footer.js') }}"></script>
+  <script>
+    if (document.getElementById("message-container")) {
+      document.getElementById("content").style.minHeight = "calc(100vh - 56px - 81px - 82px)";
+    }
+  </script>
 </body>
 </html>
