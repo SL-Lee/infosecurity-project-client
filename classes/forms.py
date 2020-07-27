@@ -82,8 +82,8 @@ class addProductForm(FlaskForm):
     submit = SubmitField('Save')
 
 class Checkout(FlaskForm):
-    creditcard = SelectField('Credit Card - ')
-    address = SelectField('Address - ')
+    creditcard = SelectField('Credit Card')
+    address = SelectField('Address')
 
 class cartForm(FlaskForm):
     productQuantity = FieldList(IntegerField(""), InputRequired(), min_entries=0, max_entries=10)
