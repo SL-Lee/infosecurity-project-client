@@ -204,6 +204,14 @@ def login():
                 if next_url is not None and is_safe_url(next_url):
                     return redirect(next_url)
 
+                if login_user(user) == True:
+                    with open("PwnedPasswordTop100k.txt", "r", encoding="utf8") as f:
+                        for line in f:
+                            if form.password.data == line:
+                                f.close()
+                    f.close()
+                    return redirect(url_for("profile"))
+
                 return redirect(url_for("index"))
             else:
                 flash("Username/Password is incorrect, please try again", category="danger")
