@@ -209,6 +209,9 @@ def login():
                     login_user(user, remember=form.remember.data)
                     if redirect_to_profile:
                         return redirect(url_for("profile"))
+                else:
+                    flash("Invalid username/password! Please Try Again!", "danger")
+                    return redirect(url_for("login"))
 
                 next_url = request.args.get("next")
                 if next_url is not None and is_safe_url(next_url):
