@@ -27,10 +27,10 @@
                         {{ render_field(form.username, class="form-control") }}
                     </div>
                     <div class="form-group">
-                        {{ render_field(form.newpassword, class="form-control") }}
+                        {{ render_field(form.currentpassword, class="form-control") }}
                     </div>
                     <div class="form-group">
-                        {{ render_field(form.currentpassword, class="form-control") }}
+                        {{ render_field(form.newpassword, class="form-control") }}
                     </div>
                     <button type="submit" class="btn btn-primary">Update</button>
                     <button type="button" class="btn btn-danger" onclick="location.href='/profile/delete'" style="float:right">Delete Profile</button>
