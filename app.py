@@ -655,36 +655,39 @@ def deletefromcart(product_id):
 
 @app.route("/cart", methods=['POST', 'GET'])
 def cart():
-    cart = []
-    product = {}
-    cart.append(product)
     try:
-        cart = session["cart"]
-        print(cart)
-        product = cart[0]
-    except:
-        print("No other item")
-    productlist = []
-    for i in product:
-        products = Product.query.filter_by(productid=i).first()
-        productlist.append(products)
-    cart_Form = forms.cartForm(request.form)
-    while len(cart_Form.productQuantity) != len(cart[0]):
-        for i in cart[0]:
-            cart_Form.productQuantity.append_entry(cart[0][i])
-    if request.method == "POST" and cart_Form.validate():
-
-        quantity = cart_Form.productQuantity.data
-        x = 0
+        cart = []
+        product = {}
+        cart.append(product)
+        try:
+            cart = session["cart"]
+            print(cart)
+            product = cart[0]
+        except:
+            print("No other item")
+        productlist = []
         for i in product:
-            product[i] = int(quantity[x])
-            x += 1
-        cart[0] = product
-        session["cart"] = cart
-        return redirect(url_for('checkout'))
+            products = Product.query.filter_by(productid=i).first()
+            productlist.append(products)
+        cart_Form = forms.cartForm(request.form)
+        while len(cart_Form.productQuantity) != len(cart[0]):
+            for i in cart[0]:
+                cart_Form.productQuantity.append_entry(cart[0][i])
+        if request.method == "POST" and cart_Form.validate():
 
-    return render_template("cart.html", len=len, cart=productlist, form=cart_Form)
+            quantity = cart_Form.productQuantity.data
+            x = 0
+            for i in product:
+                product[i] = int(quantity[x])
+                x += 1
+            cart[0] = product
+            session["cart"] = cart
+            return redirect(url_for('checkout'))
 
+        return render_template("cart.html", len=len, cart=productlist, form=cart_Form)
+    except:
+        flash("An error has occurred")
+        return redirect(url_for('index'))
 
 @app.route("/checkout", methods=["GET", "POST"])
 @login_required
@@ -839,4 +842,4 @@ def add_header(response):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
