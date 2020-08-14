@@ -189,9 +189,8 @@ def login():
     form = forms.LoginForm(request.form)
     if db.session.query(User).count() != 0:
         if request.method == "POST" and form.validate():
-            user = User.query.filter_by(username=form.username.data).first_or_404()
+            user = User.query.filter_by(username=form.username.data).first()
             if user:
-                print(user.username)
                 salt = user.password[-6:]
                 saltPassword = form.password.data + salt
                 if check_password_hash(user.password[:-6], saltPassword):
@@ -210,7 +209,7 @@ def login():
                     if redirect_to_profile:
                         return redirect(url_for("profile"))
                 else:
-                    flash("Invalid username/password! Please Try Again!", "danger")
+                    flash("Incorrect username and/or password. Please try again.", "danger")
                     return redirect(url_for("login"))
 
                 next_url = request.args.get("next")
@@ -219,7 +218,7 @@ def login():
 
                 return redirect(url_for("index"))
             else:
-                flash("Username/Password is incorrect, please try again", category="danger")
+                flash("Incorrect username and/or password. Please try again.", "danger")
                 return redirect(url_for("login"))
     else:
         return redirect(url_for("signup"))
