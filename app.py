@@ -199,12 +199,11 @@ def login():
                         for i in f.read().splitlines():
                             if form.password.data == i:
                                 flash("Your password is easily guessable or has been compromised in a data breach. Please change your password as soon as possible.", "danger")
-                                break
-
-                    if user.status == False:
-                        user.status = True
-                        db.session.commit()
-                    login_user(user, remember=form.remember.data)
+                                if user.status == False:
+                                    user.status = True
+                                    db.session.commit()
+                                login_user(user, remember=form.remember.data)
+                    return redirect(url_for("profile"))
 
                 next_url = request.args.get("next")
                 if next_url is not None and is_safe_url(next_url):
