@@ -195,15 +195,20 @@ def login():
                 salt = user.password[-6:]
                 saltPassword = form.password.data + salt
                 if check_password_hash(user.password[:-6], saltPassword):
+                    redirect_to_profile = False
                     with open("PwnedPasswordTop100k.txt", "r", encoding="UTF-8") as f:
                         for i in f.read().splitlines():
                             if form.password.data == i:
                                 flash("Your password is easily guessable or has been compromised in a data breach. Please change your password as soon as possible.", "danger")
-                                if user.status == False:
-                                    user.status = True
-                                    db.session.commit()
-                                login_user(user, remember=form.remember.data)
-                    return redirect(url_for("profile"))
+                                redirect_to_profile = True
+
+                    if user.status == False:
+                        user.status = True
+                        db.session.commit()
+
+                    login_user(user, remember=form.remember.data)
+                    if redirect_to_profile:
+                        return redirect(url_for("profile"))
 
                 next_url = request.args.get("next")
                 if next_url is not None and is_safe_url(next_url):
