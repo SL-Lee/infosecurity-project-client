@@ -112,7 +112,11 @@ class Product(db.Model):
     query_class = QueryWithSoftDelete
 
     def __repr__(self):
-        return f"Product('{self.productid}', '{self.product_name}', '{self.description}', '{self.image}', '{self.price}', '{self.quantity}, {'url': url_for('getProducts', id=self.productid) if not self.deleted else None})"
+        return (
+            f"Product('{self.productid}', '{self.product_name}', "
+            f"'{self.description}', '{self.image}', '{self.price}', "
+            f"'{self.quantity}, {'url': url_for('getProducts', id=self.productid) if not self.deleted else None})"
+        )
 
 
 """

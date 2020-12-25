@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block title %} Profile - XYZ Store {% endblock %}
 {% block content %}
 {% from "includes/_form_helper.html" import render_field %}
@@ -12,20 +12,29 @@
   <div class="row justify-content-center">
     <div class="col-sm-3">
       <h4>Details</h4>
-      <p><img src="{{ url_for('static', filename='images/person-fill.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap"> <a
-          href="{{ url_for('profile') }}">Profile</a></p>
-      <p><img src="{{ url_for('static', filename='images/credit-card.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap"> <a
-          href="{{ url_for('cards') }}">Credit Card</a></p>
-      <p><img src="{{ url_for('static', filename='images/house-fill.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap"> <a
-          href="{{ url_for('addresses') }}">Address</a></p>
-      <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt=""
-          width="24" height="24" title="Bootstrap"> <a
-          href="{{ url_for('orders') }}">Orders</a><img
+      <p>
+        <img src="{{ url_for('static', filename='images/person-fill.svg') }}"
+          alt="" width="24" height="24" title="Bootstrap" />
+        <a href="{{ url_for('profile') }}">Profile</a>
+      </p>
+      <p>
+        <img src="{{ url_for('static', filename='images/credit-card.svg') }}"
+          alt="" width="24" height="24" title="Bootstrap" />
+        <a href="{{ url_for('cards') }}">Credit Card</a>
+      </p>
+      <p>
+        <img src="{{ url_for('static', filename='images/house-fill.svg') }}"
+          alt="" width="24" height="24" title="Bootstrap" />
+        <a href="{{ url_for('addresses') }}">Address</a>
+      </p>
+      <p>
+        <img src="{{ url_for('static', filename='images/bag.svg') }}" alt=""
+          width="24" height="24" title="Bootstrap" />
+        <a href="{{ url_for('orders') }}">Orders</a>
+        <img
           src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap"></p>
+          alt="" width="24" height="24" title="Bootstrap" />
+      </p>
     </div>
     <div class="col-sm-9">
       <table class="table">
