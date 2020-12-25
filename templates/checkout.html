@@ -3,51 +3,51 @@
 {% block content %}
 {% from "includes/_form_helper.html" import render_field %}
 <div class="row justify-content-center">
-    <div class="col-sm-12">
-        <h3 class="text-center"><b>Checkout</b></h3>
-    </div>
+  <div class="col-sm-12">
+    <h3 class="text-center"><b>Checkout</b></h3>
+  </div>
 </div>
 <div class="row">
-    <div class="col-sm-6">
-        <form method="post">
-            {{ form.csrf_token }}
-            <h3>Credit/Debit Cards - <a class="btn btn-success" onclick="location.href='/cards/add'">Add</a></h3>
-            <div class="form-group">
-                {{ render_field(form.creditcard, class="form-control") }}
-            </div>
-            <h3>Addresses - <a class="btn btn-success" onclick="location.href='/addresses/add'">Add</a></h3>
-            <div class="form-group">
-                {{ render_field(form.address, class="form-control") }}
-            </div>
-            <button type="submit" class="btn btn-primary">Buy item</button>
-        </form>
-    </div>
+  <div class="col-sm-6">
+    <form method="post">
+      {{ form.csrf_token }}
+      <h3>Credit/Debit Cards - <a class="btn btn-success"
+          onclick="location.href='/cards/add'">Add</a></h3>
+      <div class="form-group">
+        {{ render_field(form.creditcard, class="form-control") }}
+      </div>
+      <h3>Addresses - <a class="btn btn-success"
+          onclick="location.href='/addresses/add'">Add</a></h3>
+      <div class="form-group">
+        {{ render_field(form.address, class="form-control") }}
+      </div>
+      <button type="submit" class="btn btn-primary">Buy item</button>
+    </form>
+  </div>
 
- <div class="col-sm-6 justify-content-center" >
-  <table class="table table-hover">
-        <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Name</th>
-                <th scope="col">Description</th>
-                <th scope="col">Price</th>
-                <th scope="col">Quantity</th>
-            </tr>
-        </thead>
-        <tbody>
+  <div class="col-sm-6 justify-content-center">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Name</th>
+          <th scope="col">Description</th>
+          <th scope="col">Price</th>
+          <th scope="col">Quantity</th>
+        </tr>
+      </thead>
+      <tbody>
         {% for i in range(len(cart)) %}
-            <tr>
-                <td>{{ cart[i].productid }}</td>
-                <td>{{ cart[i].product_name }}</td>
-                <td>{{ cart[i].description }}</td>
-                <td>{{ cart[i].price }}</td>
-                <td>{{ productquantity[i] }}</td>
-            </tr>
+        <tr>
+          <td>{{ cart[i].productid }}</td>
+          <td>{{ cart[i].product_name }}</td>
+          <td>{{ cart[i].description }}</td>
+          <td>{{ cart[i].price }}</td>
+          <td>{{ productquantity[i] }}</td>
+        </tr>
         {% endfor %}
-        </tbody>
-  </table>
- </div>
-
+      </tbody>
+    </table>
+  </div>
 </div>
-
 {% endblock %}

@@ -1,108 +1,120 @@
 {% extends "base.html" %}
 {% block title %}Admin{% endblock %}
 {% block content %}
-  <style>
-    .table-container {
-      overflow-x: auto;
-    }
+<style>
+  .table-container {
+    overflow-x: auto;
+  }
 
-    /* for striking out tr*/
-    table {
-      border-collapse: collapse;
-    }
-    td {
-        position: relative;
-        padding: 5px 10px;
-    }
-    tr.strikeout td:before {
-        content: " ";
-        position: absolute;
-        top: 50%;
-        left: 0;
-        border-bottom: 1px solid #111;
-        width: 100%;
-    }
-  </style>
+  /* for striking out tr*/
+  table {
+    border-collapse: collapse;
+  }
 
-  {% if "Admin" in current_user_roles  %}
-    <h1>Admin - {{ current_user.username }}</h1>
-  {% elif "Seller" in current_user_roles  %}
-    <h1>Seller - {{ current_user.username }}</h1>
-  {% elif "Staff" in current_user_roles  %}
-    <h1>Staff - {{ current_user.username }}</h1>
-  {% endif %}
+  td {
+    position: relative;
+    padding: 5px 10px;
+  }
 
-  {% if "Admin" in current_user_roles  %}
-    <h2>Users - <button class="btn btn-success" onclick="location.href='/admin/create/user'">Create</button></h2>
-    <div class="table-container">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Date Created</th>
-            <th>Roles</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for user in users %}
-            <tr {% if user.status == False %}class="strikeout"{% endif %}>
-              <td>{{ user.id }}</td>
-              <td>{{ user.username }}</td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.date_created }}</td>
-              <td>
-                {% for roles in user.roles %}
-                  {{ roles.name }}<br>
-                {% endfor %}
-              </td>
-              <td>
-                <button class="btn btn-danger" onclick="confirm('Are you sure you want to delete this account?') && (location.href='/admin/delete/{{ user.id }}')">Delete</button>
-              </td>
-            </tr>
+  tr.strikeout td:before {
+    content: " ";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    border-bottom: 1px solid #111;
+    width: 100%;
+  }
+</style>
+
+{% if "Admin" in current_user_roles %}
+<h1>Admin - {{ current_user.username }}</h1>
+{% elif "Seller" in current_user_roles %}
+<h1>Seller - {{ current_user.username }}</h1>
+{% elif "Staff" in current_user_roles %}
+<h1>Staff - {{ current_user.username }}</h1>
+{% endif %}
+
+{% if "Admin" in current_user_roles %}
+<h2>Users - <button class="btn btn-success"
+    onclick="location.href='/admin/create/user'">Create</button></h2>
+<div class="table-container">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Date Created</th>
+        <th>Roles</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr {% if user.status==False %}class="strikeout" {% endif %}>
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.date_created }}</td>
+        <td>
+          {% for roles in user.roles %}
+          {{ roles.name }}<br>
           {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% endif %}
-  {% if ("Seller" or "Staff") in current_user_roles  %}
-    <h2>Products - {% if "Seller" in current_user_roles  %}<button class="btn btn-success" onclick="location.href='/products/new'">Create</button>{% endif %}</h2>
-    <div class="table-container">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for product in products %}
-            <tr>
-              <td>{{ product.productid }}</td>
-              <td>{{ product.product_name }}</td>
-              <td>{{ product.description }}</td>
-              <td>${{ product.price }}</td>
-              <td>{{ product.quantity }}</td>
-              <td>
-                <div class="btn-group">
-                  <button class="btn btn-primary" onclick="location.href='/product/{{ product.productid }}'">View</button>
-                    {% if "Seller" in current_user_roles  %}
-                      <button class="btn btn-warning" onclick="location.href='/products/{{ product.productid }}/update'">Update</button>
-                      <button class="btn btn-danger" onclick="confirm('Are you sure you want to delete this product?') && (location.href='/products/{{ product.productid }}/delete')">Delete</button>
-                    {% endif %}
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      </div>
-    </div>
-  {% endif %}
+        </td>
+        <td>
+          <button class="btn btn-danger"
+            onclick="confirm('Are you sure you want to delete this account?') && (location.href='/admin/delete/{{ user.id }}')">Delete</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% if ("Seller" or "Staff") in current_user_roles %}
+<h2>Products - {% if "Seller" in current_user_roles %}<button
+    class="btn btn-success"
+    onclick="location.href='/products/new'">Create</button>{% endif %}</h2>
+<div class="table-container">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr>
+        <td>{{ product.productid }}</td>
+        <td>{{ product.product_name }}</td>
+        <td>{{ product.description }}</td>
+        <td>${{ product.price }}</td>
+        <td>{{ product.quantity }}</td>
+        <td>
+          <div class="btn-group">
+            <button class="btn btn-primary"
+              onclick="location.href='/product/{{ product.productid }}'">
+              View</button>
+            {% if "Seller" in current_user_roles %}
+            <button class="btn btn-warning"
+              onclick="location.href='/products/{{ product.productid }}/update'">
+              Update</button>
+            <button class="btn btn-danger"
+              onclick="confirm('Are you sure you want to delete this product?') && (location.href='/products/{{ product.productid }}/delete')">
+              Delete</button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</div>
+{% endif %}
 {% endblock %}

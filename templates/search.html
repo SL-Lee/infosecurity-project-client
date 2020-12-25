@@ -14,7 +14,8 @@
 </style>
 {% if query in [none, ""] %}
 <h1>Search</h1>
-<p>To start a search, type a query in the search bar (in the navigation bar) and press enter.</p>
+<p>To start a search, type a query in the search bar (in the navigation bar) and
+  press enter.</p>
 {% else %}
 <h1>Search results for "{{ query }}"</h1>
 {% if search_results %}
@@ -22,12 +23,16 @@
   {% for product in search_results %}
   <div class="col-6 col-md-4 col-lg-3">
     <div class="card mb-4">
-      <img class="card-img-top" src="{{ url_for('static', filename=product.image) }}" />
+      <img class="card-img-top"
+        src="{{ url_for('static', filename=product.image) }}" />
       <div class="card-body">
         <h5 class="card-title text-truncate">{{ product.product_name }}</h5>
         <p><b>${{ product.price }}</b></p>
-        <a class="btn btn-primary" href="{{ url_for('product', product_id=product.productid) }}">View</a>
-        <form class="d-inline ml-1" method="post" action="{{ url_for('addtocart', product_id=product.productid, quantity=1) }}"><button class="btn btn-primary">Add to Cart</button></form>
+        <a class="btn btn-primary"
+          href="{{ url_for('product', product_id=product.productid) }}">View</a>
+        <form class="d-inline ml-1" method="post"
+          action="{{ url_for('addtocart', product_id=product.productid, quantity=1) }}">
+          <button class="btn btn-primary">Add to Cart</button></form>
       </div>
     </div>
   </div>

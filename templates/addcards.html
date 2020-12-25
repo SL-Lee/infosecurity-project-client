@@ -1,63 +1,79 @@
 {% extends 'base.html' %}
 {% block title %} Profile - XYZ Store {% endblock %}
 {% block content %}
-
-    <div class="container-fluid content">
-        <div class="row justify-content-center">
-            <div class="col-sm-12">
-                <h4 class="text-center">Welcome to your profile {{ current_user.username }}</h4>
-            </div>
-        </div>
-        <div class="row justify-content-center">
-            <div class="col-sm-3">
-                <h4>Details</h4>
-                <p><img src="{{ url_for('static', filename='images/person-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('profile') }}">Profile</a></p>
-                <p><img src="{{ url_for('static', filename='images/credit-card.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('cards') }}">Credit Card</a><img src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}" alt="" width="24" height="24" title="Bootstrap"></p>
-                <p><img src="{{ url_for('static', filename='images/house-fill.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('addresses') }}">Address</a></p>
-                <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt="" width="24" height="24" title="Bootstrap"> <a href="{{ url_for('orders') }}">Orders</a></p>
-            </div>
-            <div class="col-sm-9">
-                <form name="creditForm" onsubmit="return false" method="POST">
-                    <div class="form-group">
-                        <label for="cardnum">Card Number:</label>
-                        <input class="form-control" type="number" id="cardnum" name="cardnum" required>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group col-sm-6">
-                            <label for="exp_date">Expiry Date:</label>
-                            <input class="form-control" type="date" id="exp_date" name="exp_date" required>
-                        </div>
-                    </div>
-                    <button id="submit-button" type="submit" value="Submit" class="btn btn-primary">Add</button>
-                </form>
-                <script>
-                    var submitButton = document.getElementById("submit-button");
-                    submitButton.addEventListener("click", e => {
-                        e.preventDefault();
-                        var myObj = { cardnum: document.forms["creditForm"]["cardnum"].value, exp_date: document.forms["creditForm"]["exp_date"].value};
-                        var myJSON = JSON.stringify(myObj);
-                        fetch("{{ url_for('addcards') }}", {
-                            "method": "POST",
-                            "headers": {
-                                'Content-Type': 'application/json',
-                                "X-CSRFToken": "{{ csrf_token() }}"
-                            },
-                            "body": myJSON
-                        })
-                        .then(response => {
-                            return response.text();
-                        })
-                        .then(text => {
-                            document.open();
-                            document.write(text);
-                            document.close();
-                        })
-                        .catch(error => {
-                            console.log("Error:", error);
-                        });
-                    });
-                </script>
-            </div>
-        </div>
+<div class="container-fluid content">
+  <div class="row justify-content-center">
+    <div class="col-sm-12">
+      <h4 class="text-center">Welcome to your profile {{ current_user.username
+        }}</h4>
     </div>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-sm-3">
+      <h4>Details</h4>
+      <p><img src="{{ url_for('static', filename='images/person-fill.svg') }}"
+          alt="" width="24" height="24" title="Bootstrap"> <a
+          href="{{ url_for('profile') }}">Profile</a></p>
+      <p><img src="{{ url_for('static', filename='images/credit-card.svg') }}"
+          alt="" width="24" height="24" title="Bootstrap"> <a
+          href="{{ url_for('cards') }}">Credit Card</a><img
+          src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}"
+          alt="" width="24" height="24" title="Bootstrap"></p>
+      <p><img src="{{ url_for('static', filename='images/house-fill.svg') }}"
+          alt="" width="24" height="24" title="Bootstrap"> <a
+          href="{{ url_for('addresses') }}">Address</a></p>
+      <p><img src="{{ url_for('static', filename='images/bag.svg') }}" alt=""
+          width="24" height="24" title="Bootstrap"> <a
+          href="{{ url_for('orders') }}">Orders</a></p>
+    </div>
+    <div class="col-sm-9">
+      <form name="creditForm" onsubmit="return false" method="POST">
+        <div class="form-group">
+          <label for="cardnum">Card Number:</label>
+          <input class="form-control" type="number" id="cardnum" name="cardnum"
+            required>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-sm-6">
+            <label for="exp_date">Expiry Date:</label>
+            <input class="form-control" type="date" id="exp_date"
+              name="exp_date" required>
+          </div>
+        </div>
+        <button id="submit-button" type="submit" value="Submit"
+          class="btn btn-primary">Add</button>
+      </form>
+      <script>
+        var submitButton = document.getElementById("submit-button");
+        submitButton.addEventListener("click", e => {
+          e.preventDefault();
+          var myObj = {
+            cardnum: document.forms["creditForm"]["cardnum"].value,
+            exp_date: document.forms["creditForm"]["exp_date"].value,
+          };
+          var myJSON = JSON.stringify(myObj);
+          fetch("{{ url_for('addcards') }}", {
+            "method": "POST",
+            "headers": {
+              'Content-Type': 'application/json',
+              "X-CSRFToken": "{{ csrf_token() }}"
+            },
+            "body": myJSON
+          })
+            .then(response => {
+              return response.text();
+            })
+            .then(text => {
+              document.open();
+              document.write(text);
+              document.close();
+            })
+            .catch(error => {
+              console.log("Error:", error);
+            });
+        });
+      </script>
+    </div>
+  </div>
+</div>
 {% endblock %}
