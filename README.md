@@ -35,3 +35,9 @@ This repository is for our App Security Project.
 3. Type in `.\run.bat` and press `Enter`.
 4. The batch file will generate and display a report on any packages with known security vulnerabilities, and pause execution.
 5. Press any key to continue with the execution of the batch file, where it will then proceed to run the web application, and automatically open it in a new browser tab.
+
+## Code Style
+
+This project is formatted using [Black](https://github.com/psf/black). Instructions for how to install black can be found [here](https://github.com/psf/black#installation-and-usage).
+
+Please remember to run `black --line-length=80 .` **before** committing your changes to any Python file(s) to ensure consistent formatting across all Python files in this project.
