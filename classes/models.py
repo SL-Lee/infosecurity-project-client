@@ -1,6 +1,7 @@
 from datetime import datetime
+
 from flask_login import UserMixin
-from flask_sqlalchemy import SQLAlchemy, BaseQuery
+from flask_sqlalchemy import BaseQuery, SQLAlchemy
 
 db = SQLAlchemy()
 

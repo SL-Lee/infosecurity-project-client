@@ -1,43 +1,46 @@
-import datetime, string, secrets
+import datetime
+import json
+import os
+import secrets
+import string
+from functools import wraps
+from urllib.parse import urljoin, urlparse
+
 from flask import (
+    Flask,
     abort,
     flash,
-    Flask,
     jsonify,
     make_response,
     redirect,
     render_template,
     request,
     session,
-    url_for,
+    url_for
 )
 from flask_login import (
+    LoginManager,
     current_user,
     login_required,
     login_user,
-    LoginManager,
-    logout_user,
+    logout_user
 )
-from classes import forms, MyAes
+from werkzeug.datastructures import CombinedMultiDict
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from classes import MyAes, forms
 from classes.forms import csrf
 from classes.models import (
     Address,
     CreditCard,
-    db,
     Orderproduct,
     Orders,
     Product,
     Review,
     Role,
     User,
+    db
 )
-from functools import wraps
-from urllib.parse import urljoin, urlparse
-from werkzeug.datastructures import CombinedMultiDict
-from werkzeug.security import generate_password_hash, check_password_hash
-import json
-import os
-
 
 app = Flask(__name__)
 
