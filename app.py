@@ -16,14 +16,14 @@ from flask import (
     render_template,
     request,
     session,
-    url_for
+    url_for,
 )
 from flask_login import (
     LoginManager,
     current_user,
     login_required,
     login_user,
-    logout_user
+    logout_user,
 )
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -39,7 +39,7 @@ from classes.models import (
     Review,
     Role,
     User,
-    db
+    db,
 )
 
 app = Flask(__name__)

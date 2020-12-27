@@ -14,7 +14,7 @@ from wtforms import (
     StringField,
     SubmitField,
     TextAreaField,
-    ValidationError
+    ValidationError,
 )
 from wtforms.validators import Email, InputRequired, Length, Optional
 
