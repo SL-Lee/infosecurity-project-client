@@ -76,6 +76,7 @@ class QueryWithSoftDelete(BaseQuery):
         return obj
 
     def __init__(self, *args, **kwargs):
+        # pylint: disable=super-init-not-called
         pass
 
     def with_deleted(self):
@@ -90,6 +91,8 @@ class QueryWithSoftDelete(BaseQuery):
         return super().get(*args, **kwargs)
 
     def get(self, *args, **kwargs):
+        # pylint: disable=protected-access
+
         # the query.get method does not like it if there is a filter clause
         # pre-loaded, so we need to implement it using a workaround
         obj = self.with_deleted()._get(*args, **kwargs)
