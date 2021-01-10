@@ -24,16 +24,16 @@
     <tbody>
       {% for i in range(len(cart)) %}
       <tr>
-        <td>{{ cart[i].productid }}</td>
+        <td>{{ cart[i].product_id }}</td>
         <td>{{ cart[i].product_name }}</td>
         <td>{{ cart[i].description }}</td>
         <td>{{ cart[i].price }}</td>
-        <td class="no-label">{{ render_field(form.productQuantity.entries[i],
+        <td class="no-label">{{ render_field(form.product_quantity.entries[i],
           class="form-control") }}</td>
-        <td><a href="{{ url_for('product', product_id=cart[i].productid) }}"
+        <td><a href="{{ url_for('product', product_id=cart[i].product_id) }}"
             class="btn btn-primary">View</a></td>
         <td><a
-            href="{{ url_for('deletefromcart', product_id=cart[i].productid) }}"
+            href="{{ url_for('delete_from_cart', product_id=cart[i].product_id) }}"
             class="btn btn-danger">Delete</a></td>
       </tr>
       {% endfor %}

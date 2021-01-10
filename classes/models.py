@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from flask import url_for
 from flask_login import UserMixin
 from flask_sqlalchemy import BaseQuery, SQLAlchemy
 
@@ -26,7 +27,7 @@ class User(UserMixin, db.Model):
     )
     reviews = db.relationship("Review", backref=db.backref("user"))
     orders = db.relationship("Orders", backref=db.backref("user"))
-    creditcards = db.relationship(
+    credit_cards = db.relationship(
         "CreditCard",
         backref=db.backref("user"),
         cascade="all, delete, delete-orphan",
@@ -40,7 +41,7 @@ class User(UserMixin, db.Model):
 
 class CreditCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    cardnumber = db.Column(db.String, nullable=False)
+    card_number = db.Column(db.String, nullable=False)
     expiry = db.Column(db.Date, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     iv = db.Column(db.String, nullable=False)
@@ -86,7 +87,7 @@ class QueryWithSoftDelete(BaseQuery):
 
     def _get(self, *args, **kwargs):
         # this calls the original query.get function from the base class
-        return super(QueryWithSoftDelete, self).get(*args, **kwargs)
+        return super().get(*args, **kwargs)
 
     def get(self, *args, **kwargs):
         # the query.get method does not like it if there is a filter clause
@@ -100,9 +101,9 @@ class QueryWithSoftDelete(BaseQuery):
 
 
 class Product(db.Model):
-    __tablename__ = "products"
+    __tablename__ = "product"
     __table_args__ = {"extend_existing": True}
-    productid = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(100), nullable=False)
     image = db.Column(db.String(50), nullable=False)
@@ -113,33 +114,25 @@ class Product(db.Model):
     query_class = QueryWithSoftDelete
 
     def __repr__(self):
-        return (
-            f"Product('{self.productid}', '{self.product_name}', "
-            f"'{self.description}', '{self.image}', '{self.price}', "
-            f"'{self.quantity}, {'url': url_for('getProducts', id=self.productid) if not self.deleted else None})"
+        product_id = self.product_id
+        product_name = self.product_name
+        description = self.description
+        image = self.image
+        price = self.price
+        quantity = self.quantity
+        url = url_for(
+            "get_products", id=self.product_id if not self.deleted else None
         )
-
-
-"""
-    def create(self):
-        db.session.add(self)
-        db.session.commit()
-        return self
-
-    def __init__(self, product_name, description, brand, price, quantity):
-        self.product_name = product_name
-        self.description = description
-        self.brand = brand
-        self.price = price
-        self.quantity = quantity
-
-"""
+        return (
+            f"Product('{product_id}', '{product_name}', '{description}', "
+            f"'{image}', '{price}', '{quantity}', '{url}'"
+        )
 
 
 class Review(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
     product_id = db.Column(
-        db.Integer, db.ForeignKey("products.productid"), primary_key=True
+        db.Integer, db.ForeignKey("product.product_id"), primary_key=True
     )
     rating = db.Column(db.Integer, nullable=False)
     contents = db.Column(db.String(255), nullable=False)
@@ -147,22 +140,22 @@ class Review(db.Model):
 
 
 class Orders(db.Model):
-    orderid = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     order_product = db.relationship(
-        "Orderproduct", backref=db.backref("orders")
+        "OrderProduct", backref=db.backref("orders")
     )
 
 
-class Orderproduct(db.Model):
+class OrderProduct(db.Model):
     order_id = db.Column(
         "order_id",
         db.Integer(),
-        db.ForeignKey("orders.orderid"),
+        db.ForeignKey("orders.order_id"),
         primary_key=True,
     )
     product_id = db.Column(
-        db.Integer, db.ForeignKey("products.productid"), primary_key=True
+        db.Integer, db.ForeignKey("product.product_id"), primary_key=True
     )
     quantity = db.Column(db.Integer, nullable=False)
     product = db.relationship("Product")

@@ -6,17 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}{% endblock %}</title>
   <link rel="stylesheet" type="text/css"
-    href="{{ url_for('static', filename='css/source_code_pro.css') }}" />
+    href="/static/css/source_code_pro.css" />
   <link rel="stylesheet" type="text/css"
-    href="{{ url_for('static', filename='css/source_sans_pro.css') }}" />
+    href="/static/css/source_sans_pro.css" />
   <link rel="stylesheet" type="text/css"
-    href="{{ url_for('static', filename='css/source_serif_pro.css') }}" />
-  <link rel="stylesheet" type="text/css"
-    href="{{ url_for('static', filename='css/bootstrap.min.css') }}" />
-  <link rel="stylesheet" type="text/css"
-    href="{{ url_for('static', filename='css/styles.css') }}" />
-  <link rel="icon" type="image/png"
-    href="{{ url_for('static', filename='images/favicon.png') }}" />
+    href="/static/css/source_serif_pro.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/styles.css" />
+  <link rel="icon" type="image/png" href="/static/images/favicon.png" />
 </head>
 
 <body>
@@ -32,19 +29,19 @@
           <a class="nav-link" href="/">Store</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('cart') }}">Cart</a>
+          <a class="nav-link" href="/cart">Cart</a>
         </li>
         {% if current_user.is_authenticated %}
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
+          <a class="nav-link" href="/profile">Profile</a>
         </li>
         {% if current_user.roles|length > 1 %}
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('admin') }}">Admin</a>
+          <a class="nav-link" href="/admin">Admin</a>
         </li>
         {% endif %}
         <li class="nav-item">
-          <form method="POST" action="{{ url_for('logout') }}">
+          <form method="POST" action="/logout">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <a class="nav-link" href="#"
               onclick="this.parentElement.requestSubmit()">Logout</a>
@@ -52,14 +49,14 @@
         </li>
         {% else %}
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+          <a class="nav-link" href="/login">Login</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('signup') }}">Signup</a>
+          <a class="nav-link" href="/signup">Signup</a>
         </li>
         {% endif %}
         <li class="nav-item">
-          <form class="form-inline" action="{{ url_for('search') }}">
+          <form class="form-inline" action="/search">
             <div class="input-group">
               <input class="form-control bg-dark text-white" name="q"
                 type="search" placeholder="Search" />
@@ -94,11 +91,10 @@
       <span id="current-year"></span>
     </p>
   </footer>
-  <script
-    src="{{ url_for('static', filename='js/jquery-3.5.1.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}">
+  <script src="/static/js/jquery-3.5.1.min.js"></script>
+  <script src="/static/js/bootstrap.bundle.min.js">
   </script>
-  <script src="{{ url_for('static', filename='js/footer.js') }}"></script>
+  <script src="/static/js/footer.js"></script>
   <script>
     var messageContainer = document.getElementById("message-container");
 

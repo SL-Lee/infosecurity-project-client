@@ -1,5 +1,4 @@
 import datetime
-import json
 import os
 import secrets
 import string
@@ -10,8 +9,6 @@ from flask import (
     Flask,
     abort,
     flash,
-    jsonify,
-    make_response,
     redirect,
     render_template,
     request,
@@ -28,12 +25,12 @@ from flask_login import (
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from classes import MyAes, forms
+from classes import aes, forms
 from classes.forms import csrf
 from classes.models import (
     Address,
     CreditCard,
-    Orderproduct,
+    OrderProduct,
     Orders,
     Product,
     Review,
@@ -81,81 +78,81 @@ with app.app_context():
             name="Customer", description="This is a customer account"
         )
 
-        def generate_saltpasswordhash(password):
+        def generate_salted_password_hash(password):
             letters_and_digits = string.ascii_letters + string.digits
             salt = "".join(
                 (secrets.choice(letters_and_digits) for i in range(6))
             )
-            saltPassword = password + salt
-            hashedPassword = generate_password_hash(
-                saltPassword, method="sha256"
+            salted_password = password + salt
+            hashed_password = generate_password_hash(
+                salted_password, method="sha256"
             )
-            saltedHashPassword = hashedPassword + salt
-            return saltedHashPassword
+            hashed_password_with_salt = hashed_password + salt
+            return hashed_password_with_salt
 
-        def generate_creditcard(cardnumber, expiry, user_id):
+        def generate_creditcard(card_number, expiry, user_id):
             user = User.query.filter_by(id=user_id).first_or_404()
-            key = MyAes.get_fixed_key()
-            cardnumber = str(cardnumber)
-            cardnumber, iv = MyAes.encrypt(key, cardnumber.encode("utf8"))
+            key = aes.get_fixed_key()
+            card_number = str(card_number)
+            card_number, iv = aes.encrypt(key, card_number.encode("utf8"))
             year = expiry[0:4]
             month = expiry[5:7]
             day = expiry[8:]
             date = datetime.datetime(int(year), int(month), int(day))
-            user.creditcards.append(
-                CreditCard(cardnumber=cardnumber, expiry=date, iv=iv)
+            user.credit_cards.append(
+                CreditCard(card_number=card_number, expiry=date, iv=iv)
             )
 
-        admin = User(
+        admin_user = User(
             username="admin",
             email="admin@example.com",
-            password=generate_saltpasswordhash("password"),
+            password=generate_salted_password_hash("password"),
             date_created=datetime.datetime.now(),
             status=True,
         )
-        seller = User(
+        seller_user = User(
             username="seller",
             email="seller@example.com",
-            password=generate_saltpasswordhash("password"),
+            password=generate_salted_password_hash("password"),
             date_created=datetime.datetime.now(),
             status=True,
         )
-        staff = User(
+        staff_user = User(
             username="staff",
             email="staff@example.com",
-            password=generate_saltpasswordhash("password"),
+            password=generate_salted_password_hash("password"),
             date_created=datetime.datetime.now(),
             status=True,
         )
-        customer = User(
+        customer_user = User(
             username="customer",
             email="customer@example.com",
-            password=generate_saltpasswordhash("password"),
+            password=generate_salted_password_hash("password"),
             date_created=datetime.datetime.now(),
             status=True,
         )
 
-        admin.roles.append(customer_role)
-        admin.roles.append(seller_role)
-        admin.roles.append(staff_role)
-        admin.roles.append(admin_role)
+        admin_user.roles.append(customer_role)
+        admin_user.roles.append(seller_role)
+        admin_user.roles.append(staff_role)
+        admin_user.roles.append(admin_role)
 
-        seller.roles.append(customer_role)
-        seller.roles.append(seller_role)
+        seller_user.roles.append(customer_role)
+        seller_user.roles.append(seller_role)
 
-        staff.roles.append(customer_role)
-        staff.roles.append(staff_role)
+        staff_user.roles.append(customer_role)
+        staff_user.roles.append(staff_role)
 
-        customer.roles.append(customer_role)
+        customer_user.roles.append(customer_role)
 
         db.session.add(admin_role)
         db.session.add(seller_role)
         db.session.add(staff_role)
         db.session.add(customer_role)
-        db.session.add(admin)
-        db.session.add(seller)
-        db.session.add(staff)
-        db.session.add(customer)
+        db.session.add(admin_user)
+        db.session.add(seller_user)
+        db.session.add(staff_user)
+        db.session.add(customer_user)
 
         db.session.add(
             Address(
@@ -261,13 +258,13 @@ with app.app_context():
         db.session.add(Orders(user_id=3))
         db.session.add(Orders(user_id=2))
 
-        db.session.add(Orderproduct(order_id=1, product_id=1, quantity=2))
-        db.session.add(Orderproduct(order_id=1, product_id=3, quantity=1))
-        db.session.add(Orderproduct(order_id=2, product_id=1, quantity=4))
-        db.session.add(Orderproduct(order_id=2, product_id=3, quantity=2))
-        db.session.add(Orderproduct(order_id=3, product_id=2, quantity=1))
-        db.session.add(Orderproduct(order_id=4, product_id=1, quantity=1))
-        db.session.add(Orderproduct(order_id=4, product_id=4, quantity=1))
+        db.session.add(OrderProduct(order_id=1, product_id=1, quantity=2))
+        db.session.add(OrderProduct(order_id=1, product_id=3, quantity=1))
+        db.session.add(OrderProduct(order_id=2, product_id=1, quantity=4))
+        db.session.add(OrderProduct(order_id=2, product_id=3, quantity=2))
+        db.session.add(OrderProduct(order_id=3, product_id=2, quantity=1))
+        db.session.add(OrderProduct(order_id=4, product_id=1, quantity=1))
+        db.session.add(OrderProduct(order_id=4, product_id=4, quantity=1))
         db.session.commit()
 
 
@@ -327,53 +324,53 @@ def login():
         if request.method == "POST" and form.validate():
             user = User.query.filter_by(username=form.username.data).first()
 
-            if user:
-                salt = user.password[-6:]
-                saltPassword = form.password.data + salt
+            if not user:
+                flash(
+                    "Incorrect username and/or password. Please try again.",
+                    "danger",
+                )
+                return redirect(url_for("login"))
 
-                if check_password_hash(user.password[:-6], saltPassword):
-                    redirect_to_profile = False
+            salt = user.password[-6:]
+            salted_password = form.password.data + salt
 
-                    with open(
-                        "PwnedPasswordTop100k.txt", "r", encoding="UTF-8"
-                    ) as f:
-                        for i in f.read().splitlines():
-                            if form.password.data == i:
-                                flash(
-                                    "Your password is easily guessable or has "
-                                    "been compromised in a data breach. Please "
-                                    "change your password as soon as possible.",
-                                    "danger",
-                                )
-                                redirect_to_profile = True
+            if check_password_hash(user.password[:-6], salted_password):
+                redirect_to_profile = False
 
-                    if user.status == False:
-                        user.status = True
-                        db.session.commit()
+                with open(
+                    "PwnedPasswordTop100k.txt", "r", encoding="UTF-8"
+                ) as file:
+                    for i in file.read().splitlines():
+                        if form.password.data == i:
+                            flash(
+                                "Your password is easily guessable or has "
+                                "been compromised in a data breach. Please "
+                                "change your password as soon as possible.",
+                                "danger",
+                            )
+                            redirect_to_profile = True
 
-                    login_user(user, remember=form.remember.data)
+                if not user.status:
+                    user.status = True
+                    db.session.commit()
 
-                    if redirect_to_profile:
-                        return redirect(url_for("profile"))
-                else:
-                    flash(
-                        "Incorrect username and/or password. Please try again.",
-                        "danger",
-                    )
-                    return redirect(url_for("login"))
+                login_user(user, remember=form.remember.data)
 
-                next_url = request.args.get("next")
-
-                if next_url is not None and is_safe_url(next_url):
-                    return redirect(next_url)
-
-                return redirect(url_for("index"))
+                if redirect_to_profile:
+                    return redirect(url_for("profile"))
             else:
                 flash(
                     "Incorrect username and/or password. Please try again.",
                     "danger",
                 )
                 return redirect(url_for("login"))
+
+            next_url = request.args.get("next")
+
+            if next_url is not None and is_safe_url(next_url):
+                return redirect(next_url)
+
+            return redirect(url_for("index"))
     else:
         return redirect(url_for("signup"))
 
@@ -398,23 +395,23 @@ def signup():
             salt = "".join(
                 (secrets.choice(letters_and_digits) for i in range(6))
             )
-            saltPassword = form.password.data + salt
-            hashedPassword = generate_password_hash(
-                saltPassword, method="sha256"
+            salted_password = form.password.data + salt
+            hashed_password = generate_password_hash(
+                salted_password, method="sha256"
             )
-            saltedHashPassword = hashedPassword + salt
-            newUser = User(
+            hashed_password_with_salt = hashed_password + salt
+            new_user = User(
                 username=form.username.data,
                 email=form.email.data,
-                password=saltedHashPassword,
+                password=hashed_password_with_salt,
             )
 
-            newUser.roles.append(Role.query.filter_by(name="Customer").first())
-            db.session.add(newUser)
+            new_user.roles.append(Role.query.filter_by(name="Customer").first())
+            db.session.add(new_user)
             db.session.commit()
             return redirect(url_for("login"))
-        else:
-            return redirect(url_for("signup"))
+
+        return redirect(url_for("signup"))
 
     return render_template("signup.html", form=form)
 
@@ -433,9 +430,9 @@ def profile():
 
     if request.method == "POST" and form.validate():
         salt = current_user.password[-6:]
-        saltPassword = form.currentpassword.data + salt
+        salted_password = form.current_password.data + salt
 
-        if check_password_hash(current_user.password[:-6], saltPassword):
+        if check_password_hash(current_user.password[:-6], salted_password):
             user = User.query.filter_by(id=current_user.id).first_or_404()
 
             if form.email.data != "":
@@ -444,18 +441,18 @@ def profile():
             if form.username.data != "":
                 user.username = form.username.data
 
-            if form.newpassword.data != "":
+            if form.new_password.data != "":
                 letters_and_digits = string.ascii_letters + string.digits
                 salt = "".join(
                     (secrets.choice(letters_and_digits) for i in range(6))
                 )
-                saltPassword = form.newpassword.data + salt
-                hashedPassword = generate_password_hash(
-                    saltPassword, method="sha256"
+                salted_password = form.new_password.data + salt
+                hashed_password = generate_password_hash(
+                    salted_password, method="sha256"
                 )
-                saltedHashPassword = hashedPassword + salt
+                hashed_password_with_salt = hashed_password + salt
 
-                user.password = saltedHashPassword
+                user.password = hashed_password_with_salt
 
             db.session.commit()
             return redirect(url_for("profile"))
@@ -473,29 +470,29 @@ def orders():
 @login_required
 def cards():
     user = User.query.filter_by(id=current_user.id).first()
-    creditcards = user.creditcards
-    key = MyAes.get_fixed_key()
-    cardlist = []
+    credit_cards = user.credit_cards
+    key = aes.get_fixed_key()
+    card_list = []
 
-    for i in range(len(creditcards)):
-        card = MyAes.decrypt(
-            key, creditcards[i].cardnumber, creditcards[i].iv
-        ).decode("utf8")
-        cardlist.append(card)
+    for credit_card in credit_cards:
+        card = aes.decrypt(key, credit_card.card_number, credit_card.iv).decode(
+            "utf8"
+        )
+        card_list.append(card)
 
-    print(cardlist)
+    print(card_list)
     return render_template(
         "cards.html",
         current_user=current_user,
-        cardlist=cardlist,
+        card_list=card_list,
         len=len,
-        creditcards=creditcards,
+        credit_cards=credit_cards,
     )
 
 
 @app.route("/cards/add", methods=["GET", "POST"])
 @login_required
-def addcards():
+def add_cards():
     try:
         user = User.query.filter_by(id=current_user.id).first_or_404()
 
@@ -507,44 +504,44 @@ def addcards():
             if cardnum.isalpha() or len(cardnum) == 0:
                 raise Exception("Integer only")
 
-            key = MyAes.get_fixed_key()
-            cardnumber, iv = MyAes.encrypt(key, cardnum.encode("utf8"))
+            key = aes.get_fixed_key()
+            card_number, iv = aes.encrypt(key, cardnum.encode("utf8"))
             exp_date = obj["exp_date"]
             print(exp_date)
             year = exp_date[0:4]
             month = exp_date[5:7]
             day = exp_date[8:]
             date = datetime.datetime(int(year), int(month), int(day))
-            user.creditcards.append(
-                CreditCard(cardnumber=cardnumber, expiry=date, iv=iv)
+            user.credit_cards.append(
+                CreditCard(card_number=card_number, expiry=date, iv=iv)
             )
             db.session.commit()
             return redirect(url_for("cards"))
 
-        return render_template("addcards.html", current_user=current_user)
+        return render_template("add-cards.html", current_user=current_user)
     except:
         flash("An error has occurred", "danger")
-        return redirect(url_for("addcards"))
+        return redirect(url_for("add_cards"))
 
 
 @app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
 @login_required
-def removecard(card_id):
+def remove_card(card_id):
     user = User.query.filter_by(id=current_user.id).first_or_404()
     removed = CreditCard.query.filter_by(id=card_id).first_or_404()
-    user.creditcards.remove(removed)
+    user.credit_cards.remove(removed)
     db.session.commit()
     return redirect(url_for("cards"))
 
 
 @app.route("/cards/update/<int:card_id>", methods=["GET", "POST"])
 @login_required
-def updatecard(card_id):
+def update_card(card_id):
     try:
         form = forms.CreditForm(request.form)
-        key = MyAes.get_fixed_key()
+        key = aes.get_fixed_key()
         card = CreditCard.query.filter_by(id=card_id).first_or_404()
-        creditcardnum = MyAes.decrypt(key, card.cardnumber, card.iv).decode(
+        credit_card_number = aes.decrypt(key, card.card_number, card.iv).decode(
             "utf8"
         )
 
@@ -555,26 +552,26 @@ def updatecard(card_id):
             if cardnum.isalpha() or len(cardnum) == 0:
                 raise Exception("Integer only")
 
-            key = MyAes.get_fixed_key()
-            cardnumber, iv = MyAes.encrypt(key, cardnum.encode("utf8"))
+            key = aes.get_fixed_key()
+            card_number, iv = aes.encrypt(key, cardnum.encode("utf8"))
             exp_date = obj["exp_date"]
             print(exp_date)
             year = exp_date[0:4]
             month = exp_date[5:7]
             day = exp_date[8:]
             date = datetime.datetime(int(year), int(month), int(day))
-            card.cardnumber = cardnumber
+            card.card_number = card_number
             card.iv = iv
             card.expiry = date
             db.session.commit()
             return redirect(url_for("cards"))
 
         return render_template(
-            "updatecard.html",
+            "update-card.html",
             current_user=current_user,
             form=form,
             card=card,
-            creditcardnum=creditcardnum,
+            credit_card_number=credit_card_number,
         )
     except:
         flash("An error has occurred", "danger")
@@ -589,30 +586,31 @@ def addresses():
 
 @app.route("/addresses/add", methods=["GET", "POST"])
 @login_required
-def addaddresses():
+def add_addresses():
     user = User.query.filter_by(id=current_user.id).first_or_404()
+
     if request.method == "POST":
         obj = request.json
         address = obj["address"]
         state = obj["state"]
         city = obj["city"]
-        zipCode = obj["zipCode"]
+        zip_code = obj["zipCode"]
         user.addresses.append(
             Address(
-                address=address, state=state, city=city, zip_code=int(zipCode)
+                address=address, state=state, city=city, zip_code=int(zip_code)
             )
         )
         db.session.commit()
         return redirect(url_for("addresses"))
 
-    return render_template("addaddresses.html", current_user=current_user)
+    return render_template("add-addresses.html", current_user=current_user)
 
 
-@app.route("/addresses/remove/<int:addresse_id>")
+@app.route("/addresses/remove/<int:address_id>")
 @login_required
-def removeaddresses(addresse_id):
+def remove_addresses(address_id):
     user = User.query.filter_by(id=current_user.id).first_or_404()
-    removed = Address.query.filter_by(id=addresse_id).first_or_404()
+    removed = Address.query.filter_by(id=address_id).first_or_404()
     user.addresses.remove(removed)
     db.session.commit()
     return redirect(url_for("addresses"))
@@ -620,7 +618,7 @@ def removeaddresses(addresse_id):
 
 @app.route("/addresses/update/<int:address_id>", methods=["GET", "POST"])
 @login_required
-def updateaddress(address_id):
+def update_address(address_id):
     form = forms.AddressForm(request.form)
     address = Address.query.filter_by(id=address_id).first_or_404()
 
@@ -633,7 +631,7 @@ def updateaddress(address_id):
         return redirect(url_for("addresses"))
 
     return render_template(
-        "updateaddress.html",
+        "update-address.html",
         current_user=current_user,
         form=form,
         address=address,
@@ -642,10 +640,10 @@ def updateaddress(address_id):
 
 @app.route("/profile/delete")
 @login_required
-def deleteprofile():
-    deletedUser = User.query.filter_by(id=current_user.id).first_or_404()
+def delete_profile():
+    deleted_user = User.query.filter_by(id=current_user.id).first_or_404()
     logout_user()
-    deletedUser.status = False
+    deleted_user.status = False
     db.session.commit()
     return redirect(url_for("index"))
 
@@ -657,7 +655,7 @@ def admin():
     context = {
         "current_user": current_user,
         "users": User.query.order_by(User.id).all(),
-        "products": Product.query.order_by(Product.productid).all(),
+        "products": Product.query.order_by(Product.product_id).all(),
         "current_user_roles": [i.name for i in current_user.roles],
     }
     return render_template("admin.html", **context)
@@ -666,7 +664,7 @@ def admin():
 @app.route("/admin/create/user", methods=["GET", "POST"])
 @login_required
 @restricted(access_level="admin")
-def staffsignup():
+def staff_signup():
     form = forms.AdminCreateForm(request.form)
 
     if request.method == "POST" and form.validate():
@@ -678,25 +676,25 @@ def staffsignup():
             salt = "".join(
                 (secrets.choice(letters_and_digits) for i in range(6))
             )
-            saltPassword = form.password.data + salt
-            hashedPassword = generate_password_hash(
-                saltPassword, method="sha256"
+            salted_password = form.password.data + salt
+            hashed_password = generate_password_hash(
+                salted_password, method="sha256"
             )
-            saltedHashPassword = hashedPassword + salt
+            hashed_password_with_salt = hashed_password + salt
 
-            newUser = User(
+            new_user = User(
                 username=form.username.data,
                 email=form.email.data,
-                password=saltedHashPassword,
+                password=hashed_password_with_salt,
             )
 
-            newUser.roles.append(Role.query.filter_by(name="Customer").first())
-            newUser.roles.append(Role.query.filter_by(name="Staff").first())
-            db.session.add(newUser)
+            new_user.roles.append(Role.query.filter_by(name="Customer").first())
+            new_user.roles.append(Role.query.filter_by(name="Staff").first())
+            db.session.add(new_user)
             db.session.commit()
             return redirect(url_for("admin"))
-        else:
-            return redirect(url_for("staffsignup"))
+
+        return redirect(url_for("staff_signup"))
 
     return render_template("signup.html", form=form)
 
@@ -704,9 +702,9 @@ def staffsignup():
 @app.route("/admin/delete/<int:user_id>")
 @login_required
 @restricted(access_level="admin")
-def adminDelete(user_id):
-    deletedUser = User.query.filter_by(id=user_id).first_or_404()
-    deletedUser.status = False
+def admin_delete(user_id):
+    deleted_user = User.query.filter_by(id=user_id).first_or_404()
+    deleted_user.status = False
     db.session.commit()
     return redirect(url_for("admin"))
 
@@ -714,8 +712,8 @@ def adminDelete(user_id):
 @app.route("/product/<int:product_id>", methods=["GET", "POST"])
 def product(product_id):
     form = forms.ReviewForm(request.form)
-    productQuantity = forms.productQuantity(request.form)
-    product = Product.query.filter_by(productid=product_id).first_or_404()
+    product_quantity = forms.ProductQuantity(request.form)
+    product = Product.query.filter_by(product_id=product_id).first_or_404()
     reviews = (
         Review.query.filter_by(product_id=product_id)
         .order_by(Review.rating)
@@ -755,10 +753,10 @@ def product(product_id):
     else:
         user_review = None
 
-    if productQuantity.submit.data and productQuantity.validate():
-        quantity = productQuantity.productQuantity.data
+    if product_quantity.submit.data and product_quantity.validate():
+        quantity = product_quantity.product_quantity.data
         return redirect(
-            url_for("addtocart", product_id=product_id, quantity=quantity)
+            url_for("add_to_cart", product_id=product_id, quantity=quantity)
         )
 
     return render_template(
@@ -768,11 +766,11 @@ def product(product_id):
         reviews=reviews,
         user_review=user_review,
         user_bought=user_bought,
-        productQuantity=productQuantity,
+        product_quantity=product_quantity,
     )
 
 
-@app.route("/add_review/<int:product_id>", methods=["POST"])
+@app.route("/add-review/<int:product_id>", methods=["POST"])
 def add_review(product_id):
     if not current_user.is_authenticated:
         abort(400)
@@ -781,7 +779,7 @@ def add_review(product_id):
 
     if form.validate():
         user = User.query.filter_by(id=current_user.id).first()
-        product = Product.query.filter_by(productid=product_id).first()
+        product = Product.query.filter_by(product_id=product_id).first()
 
         if None in [user, product]:
             print("No such user and/or product.")
@@ -829,7 +827,7 @@ def add_review(product_id):
     return redirect(url_for("product", product_id=product_id))
 
 
-@app.route("/edit_review/<int:product_id>", methods=["POST"])
+@app.route("/edit-review/<int:product_id>", methods=["POST"])
 def edit_review(product_id):
     if not current_user.is_authenticated:
         abort(400)
@@ -843,7 +841,8 @@ def edit_review(product_id):
 
         if review is None:
             print(
-                "No such user and/or product, or user haven't submitted a review for this product."
+                "No such user and/or product, or user haven't submitted a "
+                "review for this product."
             )
             return redirect(url_for("product", product_id=product_id))
 
@@ -857,7 +856,7 @@ def edit_review(product_id):
     return redirect(url_for("product", product_id=product_id))
 
 
-@app.route("/delete_review/<int:product_id>", methods=["POST"])
+@app.route("/delete-review/<int:product_id>", methods=["POST"])
 def delete_review(product_id):
     if not current_user.is_authenticated:
         abort(400)
@@ -868,7 +867,8 @@ def delete_review(product_id):
 
     if review is None:
         print(
-            "No such user and/or product, or user haven't submitted a review for this product."
+            "No such user and/or product, or user haven't submitted a review "
+            "for this product."
         )
         return redirect(url_for("product", product_id=product_id))
 
@@ -879,46 +879,46 @@ def delete_review(product_id):
 
 
 @app.route(
-    "/addtocart/<int:product_id>/<int:quantity>", methods=["GET", "POST"]
+    "/add-to-cart/<int:product_id>/<int:quantity>", methods=["GET", "POST"]
 )
-def addtocart(product_id, quantity):
-    product = Product.query.filter_by(productid=product_id).first_or_404()
+def add_to_cart(product_id, quantity):
+    product = Product.query.filter_by(product_id=product_id).first_or_404()
 
     if quantity > product.quantity or product.quantity == 0:
         flash("There is not enough quantity", "warning")
         return redirect(url_for("index"))
-    else:
-        try:
-            cart = session["cart"]
-            product = cart[0]
-            product = {int(k): int(v) for k, v in product.items()}
 
-            if product_id in product:
-                qt = product[product_id]
-                product[product_id] = int(qt) + int(quantity)
-                cart[0] = product
-                session["cart"] = cart
-                print(cart)
-                return redirect(url_for("cart"))
-        except:
-            print("No other item")
-            cart = []
-            product = dict()
+    try:
+        cart = session["cart"]
+        product = cart[0]
+        product = {int(k): int(v) for k, v in product.items()}
 
-        product[int(product_id)] = int(quantity)
-        print(product)
-
-        if len(cart) == 0:
-            cart.append(product)
-        else:
+        if product_id in product:
+            cart_quantity = product[product_id]
+            product[product_id] = int(cart_quantity) + int(quantity)
             cart[0] = product
+            session["cart"] = cart
+            print(cart)
+            return redirect(url_for("cart"))
+    except:
+        print("No other item")
+        cart = []
+        product = dict()
 
-        session["cart"] = cart
-        return redirect(url_for("cart"))
+    product[int(product_id)] = int(quantity)
+    print(product)
+
+    if len(cart) == 0:
+        cart.append(product)
+    else:
+        cart[0] = product
+
+    session["cart"] = cart
+    return redirect(url_for("cart"))
 
 
-@app.route("/deletefromcart/<int:product_id>", methods=["POST", "GET"])
-def deletefromcart(product_id):
+@app.route("/delete-from-cart/<int:product_id>", methods=["POST", "GET"])
+def delete_from_cart(product_id):
     cart = session["cart"]
     product = cart[0]
     print(product)
@@ -950,32 +950,32 @@ def cart():
         except:
             print("No other item")
 
-        productlist = []
+        product_list = []
 
         for i in product:
-            products = Product.query.filter_by(productid=i).first()
-            productlist.append(products)
+            products = Product.query.filter_by(product_id=i).first()
+            product_list.append(products)
 
-        cart_Form = forms.cartForm(request.form)
+        cart_form = forms.CartForm(request.form)
 
-        while len(cart_Form.productQuantity) != len(cart[0]):
+        while len(cart_form.product_quantity) != len(cart[0]):
             for i in cart[0]:
-                cart_Form.productQuantity.append_entry(cart[0][i])
+                cart_form.product_quantity.append_entry(cart[0][i])
 
-        if request.method == "POST" and cart_Form.validate():
-            quantity = cart_Form.productQuantity.data
-            x = 0
+        if request.method == "POST" and cart_form.validate():
+            quantity = cart_form.product_quantity.data
+            index = 0
 
-            for i in product:
-                product[i] = int(quantity[x])
-                x += 1
+            for product_id in product:
+                product[product_id] = int(quantity[index])
+                index += 1
 
             cart[0] = product
             session["cart"] = cart
             return redirect(url_for("checkout"))
 
         return render_template(
-            "cart.html", len=len, cart=productlist, form=cart_Form
+            "cart.html", len=len, cart=product_list, form=cart_form
         )
     except:
         flash("An error has occurred")
@@ -985,52 +985,52 @@ def cart():
 @app.route("/checkout", methods=["GET", "POST"])
 @login_required
 def checkout():
-    checkoutForm = forms.Checkout(request.form)
+    checkout_form = forms.Checkout(request.form)
     user = User.query.filter_by(id=current_user.id).first()
-    creditcards = user.creditcards
+    credit_cards = user.credit_cards
     addresses = user.addresses
-    key = MyAes.get_fixed_key()
-    cardlist = []
+    key = aes.get_fixed_key()
+    card_list = []
 
-    for i in range(len(creditcards)):
-        card = MyAes.decrypt(
-            key, creditcards[i].cardnumber, creditcards[i].iv
-        ).decode("utf8")
-        cardlist.append("Card " + card)
+    for credit_card in credit_cards:
+        card = aes.decrypt(key, credit_card.card_number, credit_card.iv).decode(
+            "utf8"
+        )
+        card_list.append("Card " + card)
 
-    checkoutForm.creditcard.choices = cardlist
-    addresslist = [
+    checkout_form.credit_card.choices = card_list
+    address_list = [
         (addresses, "%s" % (addresses[i].address))
         for i in range(len(addresses))
     ]
 
-    checkoutForm.address.choices = addresslist
+    checkout_form.address.choices = address_list
     cart = session["cart"]
     products = cart[0]
-    productlist = []
-    productquantity = []
+    product_list = []
+    product_quantity = []
 
     for i in products:
-        product = Product.query.filter_by(productid=i).first()
-        productlist.append(product)
-        productquantity.append(products[i])
+        product = Product.query.filter_by(product_id=i).first()
+        product_list.append(product)
+        product_quantity.append(products[i])
 
     if request.method == "POST":
         card = ""
-        address1 = ""
+        # address1 = ""
         order_product = ""
 
-        for i in creditcards:
-            if str(i) == checkoutForm.creditcard.data:
+        for i in credit_cards:
+            if str(i) == checkout_form.credit_card.data:
                 card = i
                 break
 
-        for i in addresses:
-            if str(i) == checkoutForm.address.data:
-                address1 = i
-                break
+        # for i in addresses:
+        #     if str(i) == checkout_form.address.data:
+        #         address1 = i
+        #         break
 
-        # cardNum = card.cardnumber
+        # cardNum = card.card_number
         # CVV = card.cvv
         # expiry = card.expiry
         # address = address1.address
@@ -1040,14 +1040,14 @@ def checkout():
         order = Orders()
 
         for i in products:
-            product = Product.query.filter_by(productid=i).first()
+            product = Product.query.filter_by(product_id=i).first()
             if products[i] > product.quantity:
                 flash("There is not enough stock", "warning")
                 return redirect(url_for("cart"))
 
         for i in products:
-            product = Product.query.filter_by(productid=i).first()
-            order_product = Orderproduct(quantity=products[i])
+            product = Product.query.filter_by(product_id=i).first()
+            order_product = OrderProduct(quantity=products[i])
             order_product.product = product
             order.order_product.append(order_product)
             product.quantity -= products[i]
@@ -1064,23 +1064,23 @@ def checkout():
 
     return render_template(
         "checkout.html",
-        form=checkoutForm,
-        cart=productlist,
+        form=checkout_form,
+        cart=product_list,
         len=len,
-        productquantity=productquantity,
+        product_quantity=product_quantity,
     )
 
 
 @app.route("/products", methods=["GET"])
-def getProducts():
+def get_products():
     return redirect("admin")
 
 
 @app.route("/products/new", methods=["GET", "POST"])
 @login_required
 @restricted(access_level="seller")
-def addProduct():
-    form = forms.addProductForm(
+def add_product():
+    form = forms.AddProductForm(
         CombinedMultiDict((request.files, request.form))
     )
 
@@ -1093,18 +1093,18 @@ def addProduct():
             filename = "images/%s" % image.filename
 
         product = Product(
-            product_name=form.productName.data,
-            description=form.productDescription.data,
+            product_name=form.product_name.data,
+            description=form.product_description.data,
             image=filename,
-            price=form.productPrice.data,
-            quantity=form.productQuantity.data,
+            price=form.product_price.data,
+            quantity=form.product_quantity.data,
         )
         db.session.add(product)
         db.session.commit()
-        flash(f"Product {{ form.productName }} added successfully", "success")
-        return redirect(url_for("product", product_id=product.productid))
+        flash(f"Product {form.product_name} added successfully", "success")
+        return redirect(url_for("product", product_id=product.product_id))
 
-    return render_template("addProduct.html", form=form)
+    return render_template("add-product.html", form=form)
 
 
 @app.route("/products/<int:product_id>/update", methods=["GET", "POST"])
@@ -1112,28 +1112,29 @@ def addProduct():
 @restricted(access_level="seller")
 def update_product(product_id):
     products = Product.query.get(product_id)
-    form = forms.addProductForm(
+    form = forms.AddProductForm(
         CombinedMultiDict((request.files, request.form))
     )
 
     if request.method == "POST" and form.validate():
-        products.product_name = form.productName.data
-        products.description = form.productDescription.data
+        products.product_name = form.product_name.data
+        products.description = form.product_description.data
         product.image = form.image.data
-        products.price = form.productPrice.data
-        products.quantity = form.productQuantity.data
+        products.price = form.product_price.data
+        products.quantity = form.product_quantity.data
         db.session.commit()
         flash("This product has been updated!", "success")
-        return redirect((url_for("getProducts")))
-    elif request.method == "GET":
-        form.productName.data = products.product_name
-        form.productDescription.data = products.description
+        return redirect((url_for("get_products")))
+
+    if request.method == "GET":
+        form.product_name.data = products.product_name
+        form.product_description.data = products.description
         form.image.data = products.image
-        form.productPrice.data = products.price
-        form.productQuantity.data = products.quantity
+        form.product_price.data = products.price
+        form.product_quantity.data = products.quantity
 
     return render_template(
-        "addProduct.html", legend="Update Product", form=form
+        "add-product.html", legend="Update Product", form=form
     )
 
 
@@ -1141,11 +1142,11 @@ def update_product(product_id):
 @login_required
 @restricted(access_level="seller")
 def delete_product(product_id):
-    products = Product.query.filter_by(productid=product_id).first()
+    products = Product.query.filter_by(product_id=product_id).first()
     products.deleted = True
     db.session.commit()
     flash("Your product has been deleted!", "success")
-    return redirect(url_for("getProducts"))
+    return redirect(url_for("get_products"))
 
 
 @app.route("/search")

@@ -25,9 +25,9 @@
         <h5 class="card-title text-truncate">{{ product.product_name }}</h5>
         <p><b>${{ product.price }}</b></p>
         <a class="btn btn-primary"
-          href="{{ url_for('product', product_id=product.productid) }}">View</a>
+          href="{{ url_for('product', product_id=product.product_id) }}">View</a>
         <form class="d-inline ml-1" method="post"
-          action="{{ url_for('addtocart', product_id=product.productid, quantity=1) }}">
+          action="{{ url_for('add_to_cart', product_id=product.product_id, quantity=1) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <button class="btn btn-primary">Add to Cart</button>
         </form>

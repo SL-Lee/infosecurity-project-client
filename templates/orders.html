@@ -13,27 +13,25 @@
     <div class="col-sm-3">
       <h4>Details</h4>
       <p>
-        <img src="{{ url_for('static', filename='images/person-fill.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap" />
-        <a href="{{ url_for('profile') }}">Profile</a>
+        <img src="/static/images/person-fill.svg" alt="" width="24"
+          height="24" />
+        <a href="/profile">Profile</a>
       </p>
       <p>
-        <img src="{{ url_for('static', filename='images/credit-card.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap" />
-        <a href="{{ url_for('cards') }}">Credit Card</a>
+        <img src="/static/images/credit-card.svg" alt="" width="24"
+          height="24" />
+        <a href="/cards">Credit Card</a>
       </p>
       <p>
-        <img src="{{ url_for('static', filename='images/house-fill.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap" />
-        <a href="{{ url_for('addresses') }}">Address</a>
+        <img src="/static/images/house-fill.svg" alt="" width="24"
+          height="24" />
+        <a href="/addresses">Address</a>
       </p>
       <p>
-        <img src="{{ url_for('static', filename='images/bag.svg') }}" alt=""
-          width="24" height="24" title="Bootstrap" />
-        <a href="{{ url_for('orders') }}">Orders</a>
-        <img
-          src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap" />
+        <img src="/static/images/bag.svg" alt="" width="24" height="24" />
+        <a href="/orders">Orders</a>
+        <img src="/static/images/chevron-compact-left.svg" alt="" width="24"
+          height="24" />
       </p>
     </div>
     <div class="col-sm-9">
@@ -50,7 +48,7 @@
           {% for order in current_user.orders %}
           <tr>
             <td>
-              {{ order.orderid }}
+              {{ order.order_id }}
             </td>
             <td>
               {% for product in order.order_product%}

@@ -14,7 +14,7 @@
       <h3>Credit/Debit Cards - <a class="btn btn-success"
           onclick="location.href='/cards/add'">Add</a></h3>
       <div class="form-group">
-        {{ render_field(form.creditcard, class="form-control") }}
+        {{ render_field(form.credit_card, class="form-control") }}
       </div>
       <h3>Addresses - <a class="btn btn-success"
           onclick="location.href='/addresses/add'">Add</a></h3>
@@ -39,11 +39,11 @@
       <tbody>
         {% for i in range(len(cart)) %}
         <tr>
-          <td>{{ cart[i].productid }}</td>
+          <td>{{ cart[i].product_id }}</td>
           <td>{{ cart[i].product_name }}</td>
           <td>{{ cart[i].description }}</td>
           <td>{{ cart[i].price }}</td>
-          <td>{{ productquantity[i] }}</td>
+          <td>{{ product_quantity[i] }}</td>
         </tr>
         {% endfor %}
       </tbody>

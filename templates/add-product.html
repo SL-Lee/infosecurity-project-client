@@ -13,16 +13,16 @@
       <form class="form" method="POST" enctype="multipart/form-data">
         {{ form.csrf_token }}
         <div class="form-group">
-          {{ render_field(form.productName, class="form-control") }}
+          {{ render_field(form.product_name, class="form-control") }}
         </div>
         <div class="form-group">
-          {{ render_field(form.productDescription, class="form-control") }}
+          {{ render_field(form.product_description, class="form-control") }}
         </div>
         <div class="form-group">
-          {{ render_field(form.productPrice, class="form-control") }}
+          {{ render_field(form.product_price, class="form-control") }}
         </div>
         <div class="form-group">
-          {{ render_field(form.productQuantity, class="form-control") }}
+          {{ render_field(form.product_quantity, class="form-control") }}
         </div>
         <div class="form-group">
           {{ render_field(form.image, class="form-control-file") }}

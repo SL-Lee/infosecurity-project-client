@@ -12,34 +12,32 @@
     <div class="col-sm-3">
       <h4>Details</h4>
       <p>
-        <img src="{{ url_for('static', filename='images/person-fill.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap" />
-        <a href="{{ url_for('profile') }}">Profile</a>
+        <img src="/static/images/person-fill.svg" alt="" width="24"
+          height="24" />
+        <a href="/profile">Profile</a>
       </p>
       <p>
-        <img src="{{ url_for('static', filename='images/credit-card.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap" />
-        <a href="{{ url_for('cards') }}">Credit Card</a>
-        <img
-          src="{{ url_for('static', filename='images/chevron-compact-left.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap" />
+        <img src="/static/images/credit-card.svg" alt="" width="24"
+          height="24" />
+        <a href="/cards">Credit Card</a>
+        <img src="/static/images/chevron-compact-left.svg" alt="" width="24"
+          height="24" />
       </p>
       <p>
-        <img src="{{ url_for('static', filename='images/house-fill.svg') }}"
-          alt="" width="24" height="24" title="Bootstrap" />
-        <a href="{{ url_for('addresses') }}">Address</a>
+        <img src="/static/images/house-fill.svg" alt="" width="24"
+          height="24" />
+        <a href="/addresses">Address</a>
       </p>
       <p>
-        <img src="{{ url_for('static', filename='images/bag.svg') }}" alt=""
-          width="24" height="24" title="Bootstrap" />
-        <a href="{{ url_for('orders') }}">Orders</a>
+        <img src="/static/images/bag.svg" alt="" width="24" height="24" />
+        <a href="/orders">Orders</a>
       </p>
     </div>
     {% macro get_card_id(card) %}
     {{ card.id }}
     {% endmacro %}
     <div class="col-sm-9">
-      <h3>Credit Number - {{ creditcardnum }}</h3>
+      <h3>Credit Number - {{ credit_card_number }}</h3>
       <form name="creditForm" onsubmit="return false" method="POST">
         <div class="form-group">
           <label for="cardnum">Card Number:</label>
@@ -65,7 +63,7 @@
             exp_date: document.forms["creditForm"]["exp_date"].value,
           };
           var myJSON = JSON.stringify(myObj);
-          fetch("{{ url_for('updatecard',card_id=get_card_id(card) ) }}", {
+          fetch("{{ url_for('update_card',card_id=get_card_id(card) ) }}", {
             "method": "POST",
             "headers": {
               "Content-Type": "application/json",

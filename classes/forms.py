@@ -6,10 +6,8 @@ from wtforms import (
     DateField,
     FieldList,
     FloatField,
-    FormField,
     IntegerField,
     PasswordField,
-    RadioField,
     SelectField,
     StringField,
     SubmitField,
@@ -28,8 +26,8 @@ def integer_length_check(min=-1, max=-1):
     )
 
     def _integer_length_check(form, field):
-        l = len(str(field.data))
-        if l < min or (max != -1 and l > max):
+        length = len(str(field.data))
+        if length < min or (max != -1 and length > max):
             raise ValidationError(message)
 
     return _integer_length_check
@@ -82,10 +80,10 @@ class UpdateForm(FlaskForm):
         [Email("Please enter your email address"), Length(max=120), Optional()],
     )
     username = StringField("Username", [Length(min=4, max=25), Optional()])
-    currentpassword = PasswordField(
+    current_password = PasswordField(
         "Current Password", [InputRequired(), Length(min=8, max=80)]
     )
-    newpassword = PasswordField(
+    new_password = PasswordField(
         "New Password", [Length(min=8, max=80), Optional()]
     )
 
@@ -100,7 +98,7 @@ class AddressForm(FlaskForm):
 
 
 class CreditForm(FlaskForm):
-    cardnumber = IntegerField(
+    card_number = IntegerField(
         "Card Number", [InputRequired(), integer_length_check(min=13, max=19)]
     )
     cvv = IntegerField(
@@ -124,30 +122,30 @@ class AdminCreateForm(FlaskForm):
     )
 
 
-class addProductForm(FlaskForm):
-    productName = StringField(
+class AddProductForm(FlaskForm):
+    product_name = StringField(
         "Product Name:", [InputRequired(), Length(max=100)]
     )
-    productDescription = TextAreaField(
+    product_description = TextAreaField(
         "Product Description:", [InputRequired()]
     )
-    productPrice = FloatField("Product Price:", [InputRequired()])
-    productQuantity = IntegerField("Product Quantity:", [InputRequired()])
+    product_price = FloatField("Product Price:", [InputRequired()])
+    product_quantity = IntegerField("Product Quantity:", [InputRequired()])
     image = FileField("Product Image:", validators=[FileAllowed("jpg", "png")])
     submit = SubmitField("Save")
 
 
 class Checkout(FlaskForm):
-    creditcard = SelectField("Credit Card")
+    credit_card = SelectField("Credit Card")
     address = SelectField("Address")
 
 
-class cartForm(FlaskForm):
-    productQuantity = FieldList(
+class CartForm(FlaskForm):
+    product_quantity = FieldList(
         IntegerField(""), InputRequired(), min_entries=0, max_entries=10
     )
 
 
-class productQuantity(FlaskForm):
-    productQuantity = IntegerField("", default=1)
+class ProductQuantity(FlaskForm):
+    product_quantity = IntegerField("", default=1)
     submit = SubmitField(label="")
