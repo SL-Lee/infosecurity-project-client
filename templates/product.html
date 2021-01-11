@@ -92,10 +92,10 @@
       {% if reviews %}
       {% for review in reviews %}
       <li class="list-group-item">
-        <p><b>{{ review.user.username }}</b> - {{ display_stars(review.rating)
+        <p><b>{{ review[0] }}</b> - {{ display_stars(review[1].rating)
           }}</p>
         <pre class="mb-0"
-          style="font-family: inherit; font-size: inherit;">{{ review.contents }}</pre>
+          style="font-family: inherit; font-size: inherit;">{{ review[1].contents }}</pre>
       </li>
       {% endfor %}
       {% else %}

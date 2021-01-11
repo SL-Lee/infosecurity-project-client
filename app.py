@@ -34,16 +34,17 @@ from classes.models import (
     Orders,
     Product,
     Review,
-    Role,
     User,
-    db,
+    UserRole,
+    client_db,
 )
+from secure_db import SecureDB
 
 app = Flask(__name__)
 
 app.secret_key = os.urandom(16)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///client_db.sqlite3"
 app.config["SESSION_COOKIE_SAMESITE"] = "Strict"
 
 login_manager = LoginManager()
@@ -51,221 +52,11 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 login_manager.login_message_category = "danger"
 
-db.init_app(app)
+client_db.init_app(app)
 csrf.init_app(app)
 
-with app.app_context():
-    db.create_all()
-
-    if db.session.query(Role).count() == 0:
-        admin_role = Role(
-            name="Admin", description="This is the master admin account"
-        )
-        seller_role = Role(
-            name="Seller",
-            description=(
-                "This is a seller account, it manages all product listings"
-            ),
-        )
-        staff_role = Role(
-            name="Staff",
-            description=(
-                "This is the staff account, it manages the reviews of the "
-                "products"
-            ),
-        )
-        customer_role = Role(
-            name="Customer", description="This is a customer account"
-        )
-
-        def generate_salted_password_hash(password):
-            letters_and_digits = string.ascii_letters + string.digits
-            salt = "".join(
-                (secrets.choice(letters_and_digits) for i in range(6))
-            )
-            salted_password = password + salt
-            hashed_password = generate_password_hash(
-                salted_password, method="sha256"
-            )
-            hashed_password_with_salt = hashed_password + salt
-            return hashed_password_with_salt
-
-        def generate_creditcard(card_number, expiry, user_id):
-            user = User.query.filter_by(id=user_id).first_or_404()
-            key = aes.get_fixed_key()
-            card_number = str(card_number)
-            card_number, iv = aes.encrypt(key, card_number.encode("utf8"))
-            year = expiry[0:4]
-            month = expiry[5:7]
-            day = expiry[8:]
-            date = datetime.datetime(int(year), int(month), int(day))
-            user.credit_cards.append(
-                CreditCard(card_number=card_number, expiry=date, iv=iv)
-            )
-
-        admin_user = User(
-            username="admin",
-            email="admin@example.com",
-            password=generate_salted_password_hash("password"),
-            date_created=datetime.datetime.now(),
-            status=True,
-        )
-        seller_user = User(
-            username="seller",
-            email="seller@example.com",
-            password=generate_salted_password_hash("password"),
-            date_created=datetime.datetime.now(),
-            status=True,
-        )
-        staff_user = User(
-            username="staff",
-            email="staff@example.com",
-            password=generate_salted_password_hash("password"),
-            date_created=datetime.datetime.now(),
-            status=True,
-        )
-        customer_user = User(
-            username="customer",
-            email="customer@example.com",
-            password=generate_salted_password_hash("password"),
-            date_created=datetime.datetime.now(),
-            status=True,
-        )
-
-        admin_user.roles.append(customer_role)
-        admin_user.roles.append(seller_role)
-        admin_user.roles.append(staff_role)
-        admin_user.roles.append(admin_role)
-
-        seller_user.roles.append(customer_role)
-        seller_user.roles.append(seller_role)
-
-        staff_user.roles.append(customer_role)
-        staff_user.roles.append(staff_role)
-
-        customer_user.roles.append(customer_role)
-
-        db.session.add(admin_role)
-        db.session.add(seller_role)
-        db.session.add(staff_role)
-        db.session.add(customer_role)
-        db.session.add(admin_user)
-        db.session.add(seller_user)
-        db.session.add(staff_user)
-        db.session.add(customer_user)
-
-        db.session.add(
-            Address(
-                address="1377 Ridge Road",
-                zip_code=67065,
-                city="Isabel",
-                state="Kansas",
-                user_id=3,
-            )
-        )
-        db.session.add(
-            Address(
-                address="2337 Millbrook Road",
-                zip_code=60607,
-                city="Chicago",
-                state="Illinois",
-                user_id=1,
-            )
-        )
-        db.session.add(
-            Address(
-                address="4530 Freedom Lane",
-                zip_code=95202,
-                city="Stockton",
-                state="California",
-                user_id=2,
-            )
-        )
-        db.session.add(
-            Address(
-                address="1053 Evergreen Lane",
-                zip_code=92614,
-                city="Irvine",
-                state="California",
-                user_id=4,
-            )
-        )
-
-        generate_creditcard(4485940457238817, "2023-02-28", 1)
-        generate_creditcard(7072719230673648, "2022-07-31", 1)
-        generate_creditcard(4744367722519153, "2024-01-31", 2)
-        generate_creditcard(7105735512242654, "2020-09-30", 3)
-        generate_creditcard(6018736652340095, "2024-05-31", 4)
-        generate_creditcard(2872570074384908, "2020-07-21", 1)
-
-        db.session.add(
-            Product(
-                product_name="Carmen Shopper",
-                description=(
-                    "1 Adjustable & Detachable Crossbody Strap, 2 Handles"
-                ),
-                image="images/ZB7938001_main.jpg",
-                price=218,
-                quantity=120,
-                deleted=False,
-            )
-        )
-        db.session.add(
-            Product(
-                product_name="Rachel Tote",
-                description="2 Handles",
-                image="images/ZB7507200_main.jpg",
-                price=198,
-                quantity=250,
-                deleted=False,
-            )
-        )
-        db.session.add(
-            Product(
-                product_name="Fiona Crossbody",
-                description="1 Adjustable & Detachable Crossbody Strap",
-                image="images/ZB7669200_main.jpg",
-                price=148,
-                quantity=150,
-                deleted=False,
-            )
-        )
-        db.session.add(
-            Product(
-                product_name="Maya Hobo",
-                description=(
-                    "1 Adjustable & Detachable Crossbody Strap, 1 Short "
-                    "Shoulder Strap"
-                ),
-                image="images/ZB6979200_main.jpg",
-                price=238,
-                quantity=200,
-                deleted=False,
-            )
-        )
-
-        db.session.add(
-            Review(
-                user_id=1,
-                product_id=1,
-                rating=5,
-                contents="I love this product!",
-            )
-        )
-
-        db.session.add(Orders(user_id=1))
-        db.session.add(Orders(user_id=3))
-        db.session.add(Orders(user_id=3))
-        db.session.add(Orders(user_id=2))
-
-        db.session.add(OrderProduct(order_id=1, product_id=1, quantity=2))
-        db.session.add(OrderProduct(order_id=1, product_id=3, quantity=1))
-        db.session.add(OrderProduct(order_id=2, product_id=1, quantity=4))
-        db.session.add(OrderProduct(order_id=2, product_id=3, quantity=2))
-        db.session.add(OrderProduct(order_id=3, product_id=2, quantity=1))
-        db.session.add(OrderProduct(order_id=4, product_id=1, quantity=1))
-        db.session.add(OrderProduct(order_id=4, product_id=4, quantity=1))
-        db.session.commit()
+SecureDB.set_api_url("http://localhost:4999/api/database")
+SecureDB.set_api_key(os.environ["ISPJ_API_KEY"])
 
 
 def is_safe_url(target):
@@ -281,7 +72,7 @@ def restricted(access_level):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            current_user_roles = [i.name for i in current_user.roles]
+            current_user_roles = [i.role.name for i in current_user.roles]
 
             if access_level == "admin page" and not any(
                 i in current_user_roles for i in ["Admin", "Seller", "Staff"]
@@ -304,12 +95,14 @@ def restricted(access_level):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return SecureDB.retrieve(model="User", filter_=f"User.id == {user_id}")[0]
 
 
 @app.route("/")
 def index():
-    products = Product.query.all()
+    products = SecureDB.retrieve(
+        model="Product", filter_="Product.product_id > 0"
+    )
     return render_template("index.html", products=products)
 
 
@@ -320,59 +113,60 @@ def login():
 
     form = forms.LoginForm(request.form)
 
-    if db.session.query(User).count() != 0:
-        if request.method == "POST" and form.validate():
-            user = User.query.filter_by(username=form.username.data).first()
+    if request.method == "POST" and form.validate():
+        try:
+            user = SecureDB.retrieve(
+                model="User",
+                filter_=f"User.username == '{form.username.data}'",
+            )[0]
+        except:
+            flash(
+                "Incorrect username and/or password. Please try again.",
+                "danger",
+            )
+            return redirect(url_for("login"))
 
-            if not user:
-                flash(
-                    "Incorrect username and/or password. Please try again.",
-                    "danger",
-                )
-                return redirect(url_for("login"))
+        salt = user.password[-6:]
+        salted_password = form.password.data + salt
 
-            salt = user.password[-6:]
-            salted_password = form.password.data + salt
+        if not check_password_hash(user.password[:-6], salted_password):
+            flash(
+                "Incorrect username and/or password. Please try again.",
+                "danger",
+            )
+            return redirect(url_for("login"))
 
-            if check_password_hash(user.password[:-6], salted_password):
-                redirect_to_profile = False
+        redirect_to_profile = False
 
-                with open(
-                    "PwnedPasswordTop100k.txt", "r", encoding="UTF-8"
-                ) as file:
-                    for i in file.read().splitlines():
-                        if form.password.data == i:
-                            flash(
-                                "Your password is easily guessable or has "
-                                "been compromised in a data breach. Please "
-                                "change your password as soon as possible.",
-                                "danger",
-                            )
-                            redirect_to_profile = True
+        with open("PwnedPasswordTop100k.txt", "r", encoding="UTF-8") as file:
+            for i in file.read().splitlines():
+                if form.password.data == i:
+                    flash(
+                        "Your password is easily guessable or has been "
+                        "compromised in a data breach. Please change your "
+                        "password as soon as possible.",
+                        "danger",
+                    )
+                    redirect_to_profile = True
 
-                if not user.status:
-                    user.status = True
-                    db.session.commit()
+        if not user.status:
+            SecureDB.update(
+                model="User",
+                filter_=f"User.username == '{form.username.data}'",
+                values={"status": True},
+            )
 
-                login_user(user, remember=form.remember.data)
+        login_user(user, remember=form.remember.data)
 
-                if redirect_to_profile:
-                    return redirect(url_for("profile"))
-            else:
-                flash(
-                    "Incorrect username and/or password. Please try again.",
-                    "danger",
-                )
-                return redirect(url_for("login"))
+        if redirect_to_profile:
+            return redirect(url_for("profile"))
 
-            next_url = request.args.get("next")
+        next_url = request.args.get("next")
 
-            if next_url is not None and is_safe_url(next_url):
-                return redirect(next_url)
+        if next_url is not None and is_safe_url(next_url):
+            return redirect(next_url)
 
-            return redirect(url_for("index"))
-    else:
-        return redirect(url_for("signup"))
+        return redirect(url_for("index"))
 
     return render_template(
         "login.html", form=form, next=request.args.get("next")
@@ -387,9 +181,14 @@ def signup():
     form = forms.RegisterForm(request.form)
 
     if request.method == "POST" and form.validate():
-        if (
-            User.query.filter_by(username=form.username.data).scalar() is None
-            and User.query.filter_by(email=form.email.data).scalar() is None
+        if not (
+            SecureDB.retrieve(
+                model="User",
+                filter_=f"User.username == '{form.username.data}'",
+            )
+            or SecureDB.retrieve(
+                model="User", filter_=f"User.email == '{form.email.data}'"
+            )
         ):
             letters_and_digits = string.ascii_letters + string.digits
             salt = "".join(
@@ -404,11 +203,23 @@ def signup():
                 username=form.username.data,
                 email=form.email.data,
                 password=hashed_password_with_salt,
+                date_created=datetime.datetime.now(),
+                status=True,
             )
 
-            new_user.roles.append(Role.query.filter_by(name="Customer").first())
-            db.session.add(new_user)
-            db.session.commit()
+            created_user = SecureDB.create(model="User", object_=new_user)
+
+            user_role = UserRole(
+                user_id=created_user.id,
+                role_id=SecureDB.retrieve(
+                    model="Role", filter_="Role.name == 'Customer'"
+                )[0].id,
+                role=SecureDB.retrieve(
+                    model="Role", filter_="Role.name == 'Customer'"
+                )[0],
+            )
+
+            SecureDB.create(model="UserRole", object_=user_role)
             return redirect(url_for("login"))
 
         return redirect(url_for("signup"))
@@ -433,13 +244,19 @@ def profile():
         salted_password = form.current_password.data + salt
 
         if check_password_hash(current_user.password[:-6], salted_password):
-            user = User.query.filter_by(id=current_user.id).first_or_404()
-
             if form.email.data != "":
-                user.email = form.email.data
+                SecureDB.update(
+                    model="User",
+                    filter_=f"User.id == {current_user.id}",
+                    values={"email": form.email.data},
+                )
 
             if form.username.data != "":
-                user.username = form.username.data
+                SecureDB.update(
+                    model="User",
+                    filter_=f"User.id == {current_user.id}",
+                    values={"username": form.username.data},
+                )
 
             if form.new_password.data != "":
                 letters_and_digits = string.ascii_letters + string.digits
@@ -452,9 +269,12 @@ def profile():
                 )
                 hashed_password_with_salt = hashed_password + salt
 
-                user.password = hashed_password_with_salt
+                SecureDB.update(
+                    model="User",
+                    filter_=f"User.id == {current_user.id}",
+                    values={"password": hashed_password_with_salt},
+                )
 
-            db.session.commit()
             return redirect(url_for("profile"))
 
     return render_template("profile.html", current_user=current_user, form=form)
@@ -469,7 +289,9 @@ def orders():
 @app.route("/cards")
 @login_required
 def cards():
-    user = User.query.filter_by(id=current_user.id).first()
+    user = SecureDB.retrieve(
+        model="User", filter_=f"User.id == {current_user.id}"
+    )[0]
     credit_cards = user.credit_cards
     key = aes.get_fixed_key()
     card_list = []
@@ -494,8 +316,6 @@ def cards():
 @login_required
 def add_cards():
     try:
-        user = User.query.filter_by(id=current_user.id).first_or_404()
-
         if request.method == "POST":
             obj = request.json
             cardnum = obj["cardnum"]
@@ -512,10 +332,15 @@ def add_cards():
             month = exp_date[5:7]
             day = exp_date[8:]
             date = datetime.datetime(int(year), int(month), int(day))
-            user.credit_cards.append(
-                CreditCard(card_number=card_number, expiry=date, iv=iv)
+
+            credit_card = CreditCard(
+                user_id=current_user.id,
+                card_number=card_number,
+                expiry=date,
+                iv=iv,
             )
-            db.session.commit()
+            SecureDB.create(model="CreditCard", object_=credit_card)
+
             return redirect(url_for("cards"))
 
         return render_template("add-cards.html", current_user=current_user)
@@ -527,10 +352,7 @@ def add_cards():
 @app.route("/cards/remove/<int:card_id>", methods=["GET", "POST"])
 @login_required
 def remove_card(card_id):
-    user = User.query.filter_by(id=current_user.id).first_or_404()
-    removed = CreditCard.query.filter_by(id=card_id).first_or_404()
-    user.credit_cards.remove(removed)
-    db.session.commit()
+    SecureDB.delete(model="CreditCard", filter_=f"CreditCard.id == {card_id}")
     return redirect(url_for("cards"))
 
 
@@ -540,7 +362,14 @@ def update_card(card_id):
     try:
         form = forms.CreditForm(request.form)
         key = aes.get_fixed_key()
-        card = CreditCard.query.filter_by(id=card_id).first_or_404()
+
+        try:
+            card = SecureDB.retrieve(
+                model="CreditCard", filter_=f"CreditCard.id == {card_id}"
+            )[0]
+        except:
+            abort(404)
+
         credit_card_number = aes.decrypt(key, card.card_number, card.iv).decode(
             "utf8"
         )
@@ -560,10 +389,16 @@ def update_card(card_id):
             month = exp_date[5:7]
             day = exp_date[8:]
             date = datetime.datetime(int(year), int(month), int(day))
-            card.card_number = card_number
-            card.iv = iv
-            card.expiry = date
-            db.session.commit()
+
+            SecureDB.update(
+                model="CreditCard",
+                filter_=f"CreditCard.id == {card_id}",
+                values={
+                    "card_number": card_number.hex(),
+                    "iv": iv.hex(),
+                    "expiry": date.strftime("%Y-%m-%d"),
+                },
+            )
             return redirect(url_for("cards"))
 
         return render_template(
@@ -587,20 +422,22 @@ def addresses():
 @app.route("/addresses/add", methods=["GET", "POST"])
 @login_required
 def add_addresses():
-    user = User.query.filter_by(id=current_user.id).first_or_404()
-
     if request.method == "POST":
         obj = request.json
         address = obj["address"]
         state = obj["state"]
         city = obj["city"]
         zip_code = obj["zipCode"]
-        user.addresses.append(
-            Address(
-                address=address, state=state, city=city, zip_code=int(zip_code)
-            )
+
+        address_object = Address(
+            user_id=current_user.id,
+            address=address,
+            state=state,
+            city=city,
+            zip_code=int(zip_code),
         )
-        db.session.commit()
+        SecureDB.create(model="Address", object_=address_object)
+
         return redirect(url_for("addresses"))
 
     return render_template("add-addresses.html", current_user=current_user)
@@ -609,10 +446,7 @@ def add_addresses():
 @app.route("/addresses/remove/<int:address_id>")
 @login_required
 def remove_addresses(address_id):
-    user = User.query.filter_by(id=current_user.id).first_or_404()
-    removed = Address.query.filter_by(id=address_id).first_or_404()
-    user.addresses.remove(removed)
-    db.session.commit()
+    SecureDB.delete(model="Address", filter_=f"Address.id == {address_id}")
     return redirect(url_for("addresses"))
 
 
@@ -620,14 +454,25 @@ def remove_addresses(address_id):
 @login_required
 def update_address(address_id):
     form = forms.AddressForm(request.form)
-    address = Address.query.filter_by(id=address_id).first_or_404()
+
+    try:
+        address = SecureDB.retrieve(
+            model="Address", filter_=f"Address.id == {address_id}"
+        )[0]
+    except:
+        abort(404)
 
     if request.method == "POST" and form.validate():
-        address.address = form.address.data
-        address.state = form.state.data
-        address.city = form.city.data
-        address.zip_code = form.zip_code.data
-        db.session.commit()
+        SecureDB.update(
+            model="Address",
+            filter_=f"Address.id == {address_id}",
+            values={
+                "address": form.address.data,
+                "state": form.state.data,
+                "city": form.city.data,
+                "zip_code": form.zip_code.data,
+            },
+        )
         return redirect(url_for("addresses"))
 
     return render_template(
@@ -641,10 +486,12 @@ def update_address(address_id):
 @app.route("/profile/delete")
 @login_required
 def delete_profile():
-    deleted_user = User.query.filter_by(id=current_user.id).first_or_404()
+    SecureDB.update(
+        model="User",
+        filter_=f"User.id == {current_user.id}",
+        values={"status": False},
+    )
     logout_user()
-    deleted_user.status = False
-    db.session.commit()
     return redirect(url_for("index"))
 
 
@@ -654,9 +501,11 @@ def delete_profile():
 def admin():
     context = {
         "current_user": current_user,
-        "users": User.query.order_by(User.id).all(),
-        "products": Product.query.order_by(Product.product_id).all(),
-        "current_user_roles": [i.name for i in current_user.roles],
+        "users": SecureDB.retrieve(model="User", filter_="User.id > 0"),
+        "products": SecureDB.retrieve(
+            model="Product", filter_="Product.product_id > 0"
+        ),
+        "current_user_roles": [i.role.name for i in current_user.roles],
     }
     return render_template("admin.html", **context)
 
@@ -668,9 +517,14 @@ def staff_signup():
     form = forms.AdminCreateForm(request.form)
 
     if request.method == "POST" and form.validate():
-        if (
-            User.query.filter_by(username=form.username.data).scalar() is None
-            and User.query.filter_by(email=form.email.data).scalar() is None
+        if not (
+            SecureDB.retrieve(
+                model="User",
+                filter_=f"User.username == '{form.username.data}'",
+            )
+            or SecureDB.retrieve(
+                model="User", filter_=f"User.email == '{form.email.data}'"
+            )
         ):
             letters_and_digits = string.ascii_letters + string.digits
             salt = "".join(
@@ -686,12 +540,34 @@ def staff_signup():
                 username=form.username.data,
                 email=form.email.data,
                 password=hashed_password_with_salt,
+                date_created=datetime.datetime.now(),
+                status=True,
             )
 
-            new_user.roles.append(Role.query.filter_by(name="Customer").first())
-            new_user.roles.append(Role.query.filter_by(name="Staff").first())
-            db.session.add(new_user)
-            db.session.commit()
+            created_user = SecureDB.create(model="User", object_=new_user)
+
+            new_user_customer_role = UserRole(
+                user_id=created_user.id,
+                role_id=SecureDB.retrieve(
+                    model="Role", filter_="Role.name == 'Customer'"
+                )[0].id,
+                role=SecureDB.retrieve(
+                    model="Role", filter_="Role.name == 'Customer'"
+                )[0],
+            )
+
+            new_user_staff_role = UserRole(
+                user_id=created_user.id,
+                role_id=SecureDB.retrieve(
+                    model="Role", filter_="Role.name == 'Staff'"
+                )[0].id,
+                role=SecureDB.retrieve(
+                    model="Role", filter_="Role.name == 'Staff'"
+                )[0],
+            )
+
+            SecureDB.create(model="UserRole", object_=new_user_customer_role)
+            SecureDB.create(model="UserRole", object_=new_user_staff_role)
             return redirect(url_for("admin"))
 
         return redirect(url_for("staff_signup"))
@@ -703,9 +579,11 @@ def staff_signup():
 @login_required
 @restricted(access_level="admin")
 def admin_delete(user_id):
-    deleted_user = User.query.filter_by(id=user_id).first_or_404()
-    deleted_user.status = False
-    db.session.commit()
+    SecureDB.update(
+        model="User",
+        filter_=f"User.id == {user_id}",
+        values={"status": False},
+    )
     return redirect(url_for("admin"))
 
 
@@ -713,11 +591,33 @@ def admin_delete(user_id):
 def product(product_id):
     form = forms.ReviewForm(request.form)
     product_quantity = forms.ProductQuantity(request.form)
-    product = Product.query.filter_by(product_id=product_id).first_or_404()
-    reviews = (
-        Review.query.filter_by(product_id=product_id)
-        .order_by(Review.rating)
-        .all()
+
+    try:
+        product = SecureDB.retrieve(
+            model="Product", filter_=f"Product.product_id == {product_id}"
+        )[0]
+
+        if product.deleted:
+            raise Exception
+    except:
+        abort(404)
+
+    reviews = sorted(
+        SecureDB.retrieve(
+            model="Review", filter_=f"Review.product_id == {product_id}"
+        ),
+        key=lambda x: x.rating,
+    )
+    reviews = list(
+        zip(
+            [
+                SecureDB.retrieve(
+                    model="User", filter_=f"User.id == {review.user_id}"
+                )[0].username
+                for review in reviews
+            ],
+            reviews,
+        )
     )
     sort_by = request.args.get("sort-by")
 
@@ -727,29 +627,34 @@ def product(product_id):
     user_bought = False
 
     if current_user.is_authenticated:
-        user_review = Review.query.filter_by(
-            user_id=current_user.id, product_id=product_id
-        ).first()
-
-        if user_review is None:
-            user_orders = Orders.query.filter_by(user_id=current_user.id).all()
-
-            if user_orders is not None:
-                for i in user_orders:
-                    break_outer_loop = False
-
-                    for j in i.order_product:
-                        if j.product == product:
-                            user_bought = True
-                            break_outer_loop = True
-                            break
-
-                    if break_outer_loop:
-                        break
-        else:
+        try:
+            user_review = SecureDB.retrieve(
+                model="Review",
+                filter_=(
+                    f"(Review.user_id == {current_user.id}) & (Review."
+                    f"product_id == {product_id})"
+                ),
+            )[0]
             user_bought = True
             form.review_rating.data = str(user_review.rating)
             form.review_contents.data = user_review.contents
+        except:
+            user_review = None
+            user_orders = SecureDB.retrieve(
+                model="Orders", filter_=f"Orders.user_id == {current_user.id}"
+            )
+
+            for i in user_orders:
+                break_outer_loop = False
+
+                for j in i.order_product:
+                    if j.product_id == product_id:
+                        user_bought = True
+                        break_outer_loop = True
+                        break
+
+                if break_outer_loop:
+                    break
     else:
         user_review = None
 
@@ -778,48 +683,54 @@ def add_review(product_id):
     form = forms.ReviewForm(request.form)
 
     if form.validate():
-        user = User.query.filter_by(id=current_user.id).first()
-        product = Product.query.filter_by(product_id=product_id).first()
-
-        if None in [user, product]:
-            print("No such user and/or product.")
+        try:
+            product = SecureDB.retrieve(
+                model="Product", filter_=f"Product.product_id == {product_id}"
+            )[0]
+        except:
+            print("No such product.")
             return redirect(url_for("product", product_id=product_id))
 
-        review = Review.query.filter_by(
-            user_id=current_user.id, product_id=product_id
-        ).first()
-
-        if review is not None:
+        if SecureDB.retrieve(
+            model="Review",
+            filter_=(
+                f"(Review.user_id == {current_user.id}) & (Review.product_id "
+                f"== {product_id})"
+            ),
+        ):
             print("User already submitted a review for this product.")
             return redirect(url_for("product", product_id=product_id))
 
-        user_orders = Orders.query.filter_by(user_id=current_user.id).all()
+        user_orders = SecureDB.retrieve(
+            model="Orders", filter_=f"Orders.user_id == {current_user.id}"
+        )
         user_bought = False
 
-        if user_orders is not None:
-            for i in user_orders:
-                break_outer_loop = False
+        for i in user_orders:
+            break_outer_loop = False
 
-                for j in i.order_product:
-                    if j.product == product:
-                        user_bought = True
-                        break_outer_loop = True
-                        break
-
-                if break_outer_loop:
+            for j in i.order_product:
+                if j.product_id == product_id:
+                    user_bought = True
+                    break_outer_loop = True
                     break
+
+            if break_outer_loop:
+                break
 
         if not user_bought:
             print("User haven't bought the product.")
             return redirect(url_for("product", product_id=product_id))
 
         review = Review(
-            rating=form.review_rating.data, contents=form.review_contents.data
+            user_id=current_user.id,
+            product_id=product_id,
+            rating=form.review_rating.data,
+            contents=form.review_contents.data,
+            product=product,
         )
-        review.product = product
-        user.reviews.append(review)
-        db.session.add(review)
-        db.session.commit()
+        SecureDB.create(model="Review", object_=review)
+
         flash("Review added successfully.", "success")
     else:
         flash("There was an error while adding your review.", "danger")
@@ -835,20 +746,25 @@ def edit_review(product_id):
     form = forms.ReviewForm(request.form)
 
     if form.validate():
-        review = Review.query.filter_by(
-            user_id=current_user.id, product_id=product_id
-        ).first()
-
-        if review is None:
+        try:
+            SecureDB.update(
+                model="Review",
+                filter_=(
+                    f"(Review.user_id == {current_user.id}) & (Review."
+                    f"product_id == {product_id})"
+                ),
+                values={
+                    "rating": form.review_rating.data,
+                    "contents": form.review_contents.data,
+                },
+            )
+        except:
             print(
                 "No such user and/or product, or user haven't submitted a "
                 "review for this product."
             )
             return redirect(url_for("product", product_id=product_id))
 
-        review.rating = form.review_rating.data
-        review.contents = form.review_contents.data
-        db.session.commit()
         flash("Review edited successfully.", "success")
     else:
         flash("There was an error while editing your review.", "danger")
@@ -861,19 +777,21 @@ def delete_review(product_id):
     if not current_user.is_authenticated:
         abort(400)
 
-    review = Review.query.filter_by(
-        user_id=current_user.id, product_id=product_id
-    ).first()
-
-    if review is None:
+    try:
+        SecureDB.delete(
+            model="Review",
+            filter_=(
+                f"(Review.user_id == {current_user.id}) & (Review."
+                f"product_id == {product_id})"
+            ),
+        )
+    except:
         print(
             "No such user and/or product, or user haven't submitted a review "
             "for this product."
         )
         return redirect(url_for("product", product_id=product_id))
 
-    db.session.delete(review)
-    db.session.commit()
     flash("Review deleted successfully.", "success")
     return redirect(url_for("product", product_id=product_id))
 
@@ -882,7 +800,12 @@ def delete_review(product_id):
     "/add-to-cart/<int:product_id>/<int:quantity>", methods=["GET", "POST"]
 )
 def add_to_cart(product_id, quantity):
-    product = Product.query.filter_by(product_id=product_id).first_or_404()
+    try:
+        product = SecureDB.retrieve(
+            model="Product", filter_=f"Product.product_id == {product_id}"
+        )[0]
+    except:
+        abort(404)
 
     if quantity > product.quantity or product.quantity == 0:
         flash("There is not enough quantity", "warning")
@@ -953,7 +876,9 @@ def cart():
         product_list = []
 
         for i in product:
-            products = Product.query.filter_by(product_id=i).first()
+            products = SecureDB.retrieve(
+                model="Product", filter_=f"Product.product_id == {i}"
+            )[0]
             product_list.append(products)
 
         cart_form = forms.CartForm(request.form)
@@ -987,6 +912,9 @@ def cart():
 def checkout():
     checkout_form = forms.Checkout(request.form)
     user = User.query.filter_by(id=current_user.id).first()
+    user = SecureDB.retrieve(
+        model="User", filter_=f"User.id == {current_user.id}"
+    )[0]
     credit_cards = user.credit_cards
     addresses = user.addresses
     key = aes.get_fixed_key()
@@ -1011,13 +939,14 @@ def checkout():
     product_quantity = []
 
     for i in products:
-        product = Product.query.filter_by(product_id=i).first()
+        product = SecureDB.retrieve(
+            model="Product", filter_=f"Product.product_id == {i}"
+        )[0]
         product_list.append(product)
         product_quantity.append(products[i])
 
     if request.method == "POST":
         card = ""
-        # address1 = ""
         order_product = ""
 
         for i in credit_cards:
@@ -1025,39 +954,35 @@ def checkout():
                 card = i
                 break
 
-        # for i in addresses:
-        #     if str(i) == checkout_form.address.data:
-        #         address1 = i
-        #         break
-
-        # cardNum = card.card_number
-        # CVV = card.cvv
-        # expiry = card.expiry
-        # address = address1.address
-        # city = address1.city
-        # state = address1.state
-        # zip_code = address1.zip_code
-        order = Orders()
+        order = Orders(user_id=current_user.id)
+        created_order = SecureDB.create(model="Orders", object_=order)
 
         for i in products:
-            product = Product.query.filter_by(product_id=i).first()
+            product = SecureDB.retrieve(
+                model="Product", filter_=f"Product.product_id == {i}"
+            )[0]
+
             if products[i] > product.quantity:
                 flash("There is not enough stock", "warning")
                 return redirect(url_for("cart"))
 
         for i in products:
-            product = Product.query.filter_by(product_id=i).first()
-            order_product = OrderProduct(quantity=products[i])
-            order_product.product = product
-            order.order_product.append(order_product)
-            product.quantity -= products[i]
-            db.session.commit()
+            product = SecureDB.retrieve(
+                model="Product", filter_=f"Product.product_id == {i}"
+            )[0]
 
-        user.orders.append(order)
-
-        db.session.add(order)
-        db.session.add(order_product)
-        db.session.commit()
+            order_product = OrderProduct(
+                order_id=created_order.order_id,
+                product_id=product.product_id,
+                quantity=products[i],
+                product=product,
+            )
+            SecureDB.create(model="OrderProduct", object_=order_product)
+            SecureDB.update(
+                model="Product",
+                filter_=f"Product.product_id == {i}",
+                values={"quantity": product.quantity - products[i]},
+            )
 
         flash("Order successfully added", "success")
         return redirect(url_for("index"))
@@ -1098,11 +1023,13 @@ def add_product():
             image=filename,
             price=form.product_price.data,
             quantity=form.product_quantity.data,
+            deleted=False,
         )
-        db.session.add(product)
-        db.session.commit()
+        created_product = SecureDB.create(model="Product", object_=product)
         flash(f"Product {form.product_name} added successfully", "success")
-        return redirect(url_for("product", product_id=product.product_id))
+        return redirect(
+            url_for("product", product_id=created_product.product_id)
+        )
 
     return render_template("add-product.html", form=form)
 
@@ -1111,27 +1038,34 @@ def add_product():
 @login_required
 @restricted(access_level="seller")
 def update_product(product_id):
-    products = Product.query.get(product_id)
+    product = SecureDB.retrieve(
+        model="Product", filter_=f"Product.product_id == {product_id}"
+    )[0]
     form = forms.AddProductForm(
         CombinedMultiDict((request.files, request.form))
     )
 
     if request.method == "POST" and form.validate():
-        products.product_name = form.product_name.data
-        products.description = form.product_description.data
-        product.image = form.image.data
-        products.price = form.product_price.data
-        products.quantity = form.product_quantity.data
-        db.session.commit()
+        SecureDB.update(
+            model="Product",
+            filter_=f"Product.product_id == {product_id}",
+            values={
+                "product_name": form.product_name.data,
+                "description": form.product_description.data,
+                "image": form.image.data,
+                "price": form.product_price.data,
+                "quantity": form.product_quantity.data,
+            },
+        )
         flash("This product has been updated!", "success")
         return redirect((url_for("get_products")))
 
     if request.method == "GET":
-        form.product_name.data = products.product_name
-        form.product_description.data = products.description
-        form.image.data = products.image
-        form.product_price.data = products.price
-        form.product_quantity.data = products.quantity
+        form.product_name.data = product.product_name
+        form.product_description.data = product.description
+        form.image.data = product.image
+        form.product_price.data = product.price
+        form.product_quantity.data = product.quantity
 
     return render_template(
         "add-product.html", legend="Update Product", form=form
@@ -1142,9 +1076,11 @@ def update_product(product_id):
 @login_required
 @restricted(access_level="seller")
 def delete_product(product_id):
-    products = Product.query.filter_by(product_id=product_id).first()
-    products.deleted = True
-    db.session.commit()
+    SecureDB.update(
+        model="Product",
+        filter_=f"Product.product_id == {product_id}",
+        values={"deleted": True},
+    )
     flash("Your product has been deleted!", "success")
     return redirect(url_for("get_products"))
 
@@ -1157,8 +1093,13 @@ def search():
         search_results = []
     else:
         query = query.strip().lower()
+        products = SecureDB.retrieve(
+            model="Product", filter_="Product.product_id > 0"
+        )
         search_results = [
-            i for i in Product.query.all() if query in i.product_name.lower()
+            i
+            for i in products
+            if query in i.product_name.lower() and not i.deleted
         ]
 
     return render_template(
