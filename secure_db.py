@@ -1,6 +1,7 @@
 import json
 
 import requests
+from flask import request
 
 from classes.models import *
 
@@ -48,6 +49,7 @@ class SecureDB:
             params={
                 "model": model,
                 "filter": filter_,
+                "ip": request.remote_addr,
             },
             headers={"X-API-KEY": cls.__api_key},
         )
