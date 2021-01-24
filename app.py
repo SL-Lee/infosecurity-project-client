@@ -72,20 +72,25 @@ def restricted(access_level):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            current_user_roles = [i.role.name for i in current_user.roles]
+            current_user_roles = [
+                user_role.role.name for user_role in current_user.roles
+            ]
 
             if access_level == "admin page" and not any(
-                i in current_user_roles for i in ["Admin", "Seller", "Staff"]
+                required_role in current_user_roles
+                for required_role in ["Admin", "Seller", "Staff"]
             ):
                 abort(404)
-            elif access_level == "admin" and "Admin" not in current_user_roles:
+
+            if access_level == "admin" and "Admin" not in current_user_roles:
                 abort(404)
-            elif (
-                access_level == "seller" and "Seller" not in current_user_roles
-            ):
+
+            if access_level == "seller" and "Seller" not in current_user_roles:
                 abort(404)
-            elif access_level == "staff" and "Staff" not in current_user_roles:
+
+            if access_level == "staff" and "Staff" not in current_user_roles:
                 abort(404)
+
             return func(*args, **kwargs)
 
         return wrapper
@@ -139,8 +144,8 @@ def login():
         redirect_to_profile = False
 
         with open("PwnedPasswordTop100k.txt", "r", encoding="UTF-8") as file:
-            for i in file.read().splitlines():
-                if form.password.data == i:
+            for insecure_password in file.read().splitlines():
+                if form.password.data == insecure_password:
                     flash(
                         "Your password is easily guessable or has been "
                         "compromised in a data breach. Please change your "
@@ -192,7 +197,7 @@ def signup():
         ):
             letters_and_digits = string.ascii_letters + string.digits
             salt = "".join(
-                (secrets.choice(letters_and_digits) for i in range(6))
+                (secrets.choice(letters_and_digits) for _ in range(6))
             )
             salted_password = form.password.data + salt
             hashed_password = generate_password_hash(
@@ -209,14 +214,13 @@ def signup():
 
             created_user = SecureDB.create(model="User", object_=new_user)
 
+            customer_role = SecureDB.retrieve(
+                model="Role", filter_="Role.name == 'Customer'"
+            )[0]
             user_role = UserRole(
                 user_id=created_user.id,
-                role_id=SecureDB.retrieve(
-                    model="Role", filter_="Role.name == 'Customer'"
-                )[0].id,
-                role=SecureDB.retrieve(
-                    model="Role", filter_="Role.name == 'Customer'"
-                )[0],
+                role_id=customer_role.id,
+                role=customer_role,
             )
 
             SecureDB.create(model="UserRole", object_=user_role)
@@ -261,7 +265,7 @@ def profile():
             if form.new_password.data != "":
                 letters_and_digits = string.ascii_letters + string.digits
                 salt = "".join(
-                    (secrets.choice(letters_and_digits) for i in range(6))
+                    (secrets.choice(letters_and_digits) for _ in range(6))
                 )
                 salted_password = form.new_password.data + salt
                 hashed_password = generate_password_hash(
@@ -505,7 +509,9 @@ def admin():
         "products": SecureDB.retrieve(
             model="Product", filter_="Product.product_id > 0"
         ),
-        "current_user_roles": [i.role.name for i in current_user.roles],
+        "current_user_roles": [
+            user_role.role.name for user_role in current_user.roles
+        ],
     }
     return render_template("admin.html", **context)
 
@@ -528,7 +534,7 @@ def staff_signup():
         ):
             letters_and_digits = string.ascii_letters + string.digits
             salt = "".join(
-                (secrets.choice(letters_and_digits) for i in range(6))
+                (secrets.choice(letters_and_digits) for _ in range(6))
             )
             salted_password = form.password.data + salt
             hashed_password = generate_password_hash(
@@ -546,24 +552,22 @@ def staff_signup():
 
             created_user = SecureDB.create(model="User", object_=new_user)
 
+            customer_role = SecureDB.retrieve(
+                model="Role", filter_="Role.name == 'Customer'"
+            )[0]
             new_user_customer_role = UserRole(
                 user_id=created_user.id,
-                role_id=SecureDB.retrieve(
-                    model="Role", filter_="Role.name == 'Customer'"
-                )[0].id,
-                role=SecureDB.retrieve(
-                    model="Role", filter_="Role.name == 'Customer'"
-                )[0],
+                role_id=customer_role.id,
+                role=customer_role,
             )
 
+            staff_role = SecureDB.retrieve(
+                model="Role", filter_="Role.name == 'Staff'"
+            )[0]
             new_user_staff_role = UserRole(
                 user_id=created_user.id,
-                role_id=SecureDB.retrieve(
-                    model="Role", filter_="Role.name == 'Staff'"
-                )[0].id,
-                role=SecureDB.retrieve(
-                    model="Role", filter_="Role.name == 'Staff'"
-                )[0],
+                role_id=staff_role.id,
+                role=staff_role,
             )
 
             SecureDB.create(model="UserRole", object_=new_user_customer_role)
@@ -644,11 +648,11 @@ def product(product_id):
                 model="Orders", filter_=f"Orders.user_id == {current_user.id}"
             )
 
-            for i in user_orders:
+            for user_order in user_orders:
                 break_outer_loop = False
 
-                for j in i.order_product:
-                    if j.product_id == product_id:
+                for order_product in user_order.order_product:
+                    if order_product.product_id == product_id:
                         user_bought = True
                         break_outer_loop = True
                         break
@@ -706,11 +710,11 @@ def add_review(product_id):
         )
         user_bought = False
 
-        for i in user_orders:
+        for user_order in user_orders:
             break_outer_loop = False
 
-            for j in i.order_product:
-                if j.product_id == product_id:
+            for order_product in user_order.order_product:
+                if order_product.product_id == product_id:
                     user_bought = True
                     break_outer_loop = True
                     break
@@ -842,19 +846,8 @@ def add_to_cart(product_id, quantity):
 
 @app.route("/delete-from-cart/<int:product_id>", methods=["POST", "GET"])
 def delete_from_cart(product_id):
-    cart = session["cart"]
-    product = cart[0]
-    print(product)
-    print(product_id)
-
-    for i in product:
-        print(i)
-
-        if int(i) == int(product_id):
-            product.pop(i)
-            cart[0] = product
-            break
-
+    cart = session["cart"][0]
+    cart.pop(product_id, None)
     session["cart"] = cart
     return redirect(url_for("cart"))
 
@@ -875,17 +868,17 @@ def cart():
 
         product_list = []
 
-        for i in product:
+        for product_id in product:
             products = SecureDB.retrieve(
-                model="Product", filter_=f"Product.product_id == {i}"
+                model="Product", filter_=f"Product.product_id == {product_id}"
             )[0]
             product_list.append(products)
 
         cart_form = forms.CartForm(request.form)
 
         while len(cart_form.product_quantity) != len(cart[0]):
-            for i in cart[0]:
-                cart_form.product_quantity.append_entry(cart[0][i])
+            for product_id in cart[0]:
+                cart_form.product_quantity.append_entry(cart[0][product_id])
 
         if request.method == "POST" and cart_form.validate():
             quantity = cart_form.product_quantity.data
@@ -938,50 +931,44 @@ def checkout():
     product_list = []
     product_quantity = []
 
-    for i in products:
+    for product_id in products:
         product = SecureDB.retrieve(
-            model="Product", filter_=f"Product.product_id == {i}"
+            model="Product", filter_=f"Product.product_id == {product_id}"
         )[0]
         product_list.append(product)
-        product_quantity.append(products[i])
+        product_quantity.append(products[product_id])
 
     if request.method == "POST":
         card = ""
         order_product = ""
 
-        for i in credit_cards:
-            if str(i) == checkout_form.credit_card.data:
-                card = i
+        for credit_card in credit_cards:
+            if str(credit_card) == checkout_form.credit_card.data:
+                card = credit_card
                 break
 
         order = Orders(user_id=current_user.id)
         created_order = SecureDB.create(model="Orders", object_=order)
 
-        for i in products:
-            product = SecureDB.retrieve(
-                model="Product", filter_=f"Product.product_id == {i}"
-            )[0]
+        if any(
+            product_quantity[i] > product.quantity
+            for i, product in enumerate(product_list)
+        ):
+            flash("There is not enough stock", "warning")
+            return redirect(url_for("cart"))
 
-            if products[i] > product.quantity:
-                flash("There is not enough stock", "warning")
-                return redirect(url_for("cart"))
-
-        for i in products:
-            product = SecureDB.retrieve(
-                model="Product", filter_=f"Product.product_id == {i}"
-            )[0]
-
+        for i, product in enumerate(product_list):
             order_product = OrderProduct(
                 order_id=created_order.order_id,
                 product_id=product.product_id,
-                quantity=products[i],
+                quantity=product_quantity[i],
                 product=product,
             )
             SecureDB.create(model="OrderProduct", object_=order_product)
             SecureDB.update(
                 model="Product",
-                filter_=f"Product.product_id == {i}",
-                values={"quantity": product.quantity - products[i]},
+                filter_=f"Product.product_id == {product.product_id}",
+                values={"quantity": product.quantity - product_quantity[i]},
             )
 
         flash("Order successfully added", "success")
@@ -1097,9 +1084,9 @@ def search():
             model="Product", filter_="Product.product_id > 0"
         )
         search_results = [
-            i
-            for i in products
-            if query in i.product_name.lower() and not i.deleted
+            product
+            for product in products
+            if query in product.product_name.lower() and not product.deleted
         ]
 
     return render_template(
