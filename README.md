@@ -1,14 +1,16 @@
 # infosecurity-project-client
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 IT2566 Infosecurity Project Client
 
 ## Prerequisites
 
-- [SQLite3 tools must be installed](#how-to-install-sqlite3-tools)
-- [The required pip dependencies are installed](#how-to-set-up-a-virtual-environment-venv)
-- [The `ISPJ_API_KEY` environment variable must be set](#how-to-set-the-ispj_api_key-environment-variable)
+- [Sqlite3 Tools Must Be Installed](#how-to-install-sqlite3-tools)
+- [Required Pip Dependencies Are Installed](#how-to-set-up-a-virtual-environment-venv)
+- [The `ISPJ_API_KEY` Environment Variable Must Be Set](#how-to-set-the-ispj_api_key-environment-variable)
 
-## How to install SQLite3 tools
+## How to Install sqlite3 Tools
 
 1. Visit [this page](https://www.sqlite.org/download.html) and download `sqlite-tools-win32-x86-3330000.zip` (or use this [direct link](https://www.sqlite.org/2020/sqlite-tools-win32-x86-3330000.zip)).
 2. In the zip file, extract the 3 EXE files to the `C:\sqlite3` directory.
@@ -18,7 +20,7 @@ IT2566 Infosecurity Project Client
 6. Click on `New`, type in `C:\sqlite3`, and press `Enter`.
 7. Press `OK` on all the previous dialogs to close them.
 
-## How to set up a virtual environment (venv)
+## How to Set up a Virtual Environment (venv)
 
 1. Open an administrator command prompt.
 2. Change directory to the project folder (e.g. `C:\Users\<username>\infosecurity-project\`).
@@ -34,7 +36,7 @@ IT2566 Infosecurity Project Client
 > 4. Run `pip freeze > requirements.txt`.
 > 5. Commit the changes to `requirements.txt` and push it to the remote repository.
 
-## How to set the `ISPJ_API_KEY` environment variable
+## How to Set the `ISPJ_API_KEY` Environment Variable
 
 This application sends requests to the [infosecurity-project](https://github.com/SL-Lee/infosecurity-project/) server for database queries, which will require an API key (which is read from the `ISPJ_API_KEY` environment variable). The steps below details how to set this environment variable.
 
@@ -44,7 +46,7 @@ This application sends requests to the [infosecurity-project](https://github.com
 4. Type in `ISPJ_API_KEY` for the **Variable name** field and the appropriate API key for the **Variable value** field.
 5. Press `OK` on all the previous dialogs to close them.
 
-## How to run the application
+## How to Run the Application
 
 1. Open a command prompt window and change directory to the project folder (e.g. `C:\Users\<username>\infosecurity-project-client`).
 2. If you are using a virtual environment, activate it by typing `venv\scripts\activate` and press `Enter`. If not, then make sure that all packages listed in `requirements.txt` are installed globally, and move on to the next step.
@@ -56,46 +58,40 @@ This application sends requests to the [infosecurity-project](https://github.com
 
 This project is formatted using [Black](https://github.com/psf/black). Instructions for how to install black can be found [here](https://github.com/psf/black#installation-and-usage).
 
-Please remember to run `black --line-length=80 .` **before** committing your changes to any Python file(s) to ensure consistent formatting across all Python files in this project.
-
+Please remember to run `black .` **before** committing your changes to any Python file(s) to ensure consistent formatting across all Python files in this project.
 
 ## Case Styles
 
-- `camelCase` is the first word is all lowercase, then subsequent words are capitalized and appended directly to the previous word(s)
-- `PascalCase` is like `camelCase` but the first word is also capitalized
-- `snake_case` is where all words are in lowercase, delimited by a single underscore
-- `SCREAMING_SNAKE_CASE` is like `snake_case` but all words are in uppercase
-- `kebab-case` is where all words are in lowercase, delimited by a single hyphen
+- `camelCase`: first word is all lowercase, then subsequent words are capitalized. Has no delimiters.
+- `PascalCase`: like `camelCase`, but the first word is also capitalized.
+- `snake_case`: all words are in lowercase, delimited by a single underscore.
+- `SCREAMING_SNAKE_CASE` like `snake_case`, but all words are in uppercase.
+- `kebab-case` all words are in lowercase, delimited by a single hyphen.
 
-## Code Style
+### What Case Style to Use
 
-This project is formatted using [Black](https://github.com/psf/black). Instructions for how to install black can be found [here](https://github.com/psf/black#installation-and-usage).
+#### Python
 
-Please remember to run `black --line-length=80 .` **before** committing your changes to any Python file(s) to ensure consistent formatting across all Python files in this project.
+Use `snake_case` for most names, except:
 
-## What Case Style to use
-
-### Python
-
-- Variables: `snake_case` for most variables
-- Class Names: `PascalCase`
-- Constants: `SCREAMING_SNAKE_CASE`
-- Filename: `snake_case`
-
-You **DO NOT** use `camelCase` in Python
-
-### JavaScript
-
-- Variables: `camelCase` for most variables
-- Class Names: `PascalCase`
+- Class names: `PascalCase`
 - Constants: `SCREAMING_SNAKE_CASE`
 
-You **DO NOT** use `snake_case` in JavaScript
+You **DO NOT** use `camelCase` in Python.
 
-### CSS (e.g. `background-color`), HTML (e.g. `.col-md-6`), and URLs (e.g. `/api/key-management`)
+#### JavaScript
 
-- All (including HTML files): `kebab-case`
+Use `camelCase` for most names, except:
 
-### Jinja
+- Class names: `PascalCase`
+- Constants: `SCREAMING_SNAKE_CASE`
 
-- Variables: `snake_case`
+You **DO NOT** use `snake_case` in JavaScript.
+
+### CSS (e.g. `background-color`), HTML attribute names and values (e.g. `<button data-target="#generate-new-api-key-prompt">Generate New API Key</button>`), and URLs (e.g. `/api/key-management`)
+
+Use `kebab-case` for all names.
+
+#### Jinja
+
+Use `snake_case` for Jinja variables, since they are essentially Python variables under the hood.
