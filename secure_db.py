@@ -28,6 +28,8 @@ class SecureDB:
             data={
                 "model": model,
                 "object": object_,
+                "ip": request.remote_addr,
+                "url": request.path,
             },
             headers={"X-API-KEY": cls.__api_key},
         )
@@ -50,6 +52,7 @@ class SecureDB:
                 "model": model,
                 "filter": filter_,
                 "ip": request.remote_addr,
+                "url": request.path,
             },
             headers={"X-API-KEY": cls.__api_key},
         )
@@ -72,6 +75,8 @@ class SecureDB:
                 "model": model,
                 "filter": filter_,
                 "values": json.dumps(values, default=str),
+                "ip": request.remote_addr,
+                "url": request.path,
             },
             headers={"X-API-KEY": cls.__api_key},
         )
@@ -85,6 +90,8 @@ class SecureDB:
             data={
                 "model": model,
                 "filter": filter_,
+                "ip": request.remote_addr,
+                "url": request.path,
             },
             headers={"X-API-KEY": cls.__api_key},
         )
